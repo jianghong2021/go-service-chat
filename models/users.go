@@ -29,17 +29,18 @@ func CreateUser(name string, password string, avator string, nickname string, ro
 	DB.Create(user)
 	return user.ID
 }
-func UpdateUser(name string, password string, avator string, nickname string, role string) {
+func UpdateUser(id string, name string, password string, avator string, nickname string, role string) {
 	user := &User{
 		Avator:   avator,
 		Nickname: nickname,
 		Role:     role,
+		Name:     name,
 	}
 	user.UpdatedAt = time.Now()
 	if password != "" {
 		user.Password = password
 	}
-	DB.Model(&User{}).Where("name = ?", name).Update(user)
+	DB.Model(&User{}).Where("id = ?", id).Update(user)
 }
 func UpdateUserPass(name string, pass string) {
 	user := &User{

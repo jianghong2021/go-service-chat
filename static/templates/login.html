@@ -63,30 +63,6 @@
                 <el-form-item>
                     <el-button style="width: 100%" type="primary" @click="handleLogin('loginForm')">Log In</el-button>
                 </el-form-item>
-                <el-form-item>
-                    <el-button style="width: 100%" @click="showRegHtml=true">Create New Account</el-button>
-                </el-form-item>
-            </el-form>
-
-            <el-form :model="form" :rules="rules" ref="registerForm" v-show="showRegHtml">
-                <el-form-item prop="account">
-                    <el-input v-model="form.account" placeholder="Choose a username"></el-input>
-                </el-form-item>
-                <el-form-item prop="nickname">
-                    <el-input v-model="form.nickname" placeholder="Create a display name"></el-input>
-                </el-form-item>
-                <el-form-item prop="password">
-                    <el-input show-password v-model="form.password" placeholder="Create a password"></el-input>
-                </el-form-item>
-                <el-form-item prop="rePassword">
-                    <el-input show-password v-on:keyup.enter.native="handleRegister('registerForm')" v-model="form.rePassword" placeholder="Confirm password"></el-input>
-                </el-form-item>
-                <el-form-item>
-                    <el-button style="width: 100%" type="primary" @click="handleRegister('registerForm')">Sign Up</el-button>
-                </el-form-item>
-                <el-form-item>
-                    <el-button style="width: 100%" @click="showRegHtml=false">Back to Login</el-button>
-                </el-form-item>
             </el-form>
         </div>
 
@@ -142,14 +118,6 @@
                 });
             },
 
-            handleRegister(formName) {
-                this.$refs[formName].validate((valid) => {
-                    if (valid) {
-                        this.register();
-                    }
-                });
-            },
-
             login() {
                 let data = {
                     "username": this.form.account,
@@ -177,42 +145,6 @@
                     });
                 });
             },
-
-            register() {
-                if (this.form.password !== this.form.rePassword) {
-                    this.$message({
-                        message: 'Passwords don\'t match',
-                        type: 'error'
-                    });
-                    return;
-                }
-
-                let data = {
-                    "username": this.form.account,
-                    "password": this.form.password,
-                    "nickname": this.form.nickname,
-                };
-
-                $.post("/register", data, (response) => {
-                    if (response.code === 200) {
-                        this.$message({
-                            message: 'Account created successfully!',
-                            type: 'success'
-                        });
-                        this.showRegHtml = false;
-                    } else {
-                        this.$message({
-                            message: response.msg || 'Registration failed',
-                            type: 'error'
-                        });
-                    }
-                }).fail(() => {
-                    this.$message({
-                        message: 'Connection error',
-                        type: 'error'
-                    });
-                });
-            }
         },
         created: function() {
             if (top.location != location) {

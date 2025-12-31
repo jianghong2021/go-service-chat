@@ -4,3 +4,4 @@ config/mysql.json
 logs
 static/upload
 install.lock
+*.exe

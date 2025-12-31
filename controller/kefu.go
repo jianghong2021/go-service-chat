@@ -82,7 +82,7 @@ func GetKefuInfo(c *gin.Context) {
 	info["avator"] = user.Avator
 	info["username"] = user.Name
 	info["nickname"] = user.Nickname
-	info["uid"] = user.ID
+	info["role"] = user.Role
 	c.JSON(200, gin.H{
 		"code":   200,
 		"msg":    "ok",
@@ -165,6 +165,16 @@ func PostKefuRegister(c *gin.Context) {
 	role := c.PostForm("role")
 	avatar := "/static/images/4.jpg"
 
+	kefu_role, ok := c.Get("kefu_role")
+	if !ok || kefu_role != "1" {
+		c.JSON(200, gin.H{
+			"code":   403,
+			"msg":    "没有权限",
+			"result": nil,
+		})
+		return
+	}
+
 	if name == "" || password == "" {
 		c.JSON(http.StatusOK, gin.H{
 			"code":   400,
@@ -203,7 +213,8 @@ func PostKefuRegister(c *gin.Context) {
 	})
 }
 func PostKefuInfo(c *gin.Context) {
-	name, _ := c.Get("kefu_name")
+	id := c.PostForm("id")
+	name := c.PostForm("username")
 	password := c.PostForm("password")
 	avator := c.PostForm("avator")
 	role := c.PostForm("role")
@@ -211,6 +222,17 @@ func PostKefuInfo(c *gin.Context) {
 	if password != "" {
 		password = tools.Md5(password)
 	}
+
+	kefu_role, ok := c.Get("kefu_role")
+	if !ok || kefu_role != "1" {
+		c.JSON(200, gin.H{
+			"code":   403,
+			"msg":    "没有权限",
+			"result": nil,
+		})
+		return
+	}
+
 	if name == "" {
 		c.JSON(200, gin.H{
 			"code": 400,
@@ -218,7 +240,7 @@ func PostKefuInfo(c *gin.Context) {
 		})
 		return
 	}
-	models.UpdateUser(name.(string), password, avator, nickname, role)
+	models.UpdateUser(id, name, password, avator, nickname, role)
 
 	c.JSON(200, gin.H{
 		"code":   200,
@@ -227,6 +249,15 @@ func PostKefuInfo(c *gin.Context) {
 	})
 }
 func GetKefuList(c *gin.Context) {
+	kefu_role, ok := c.Get("kefu_role")
+	if !ok || kefu_role != "1" {
+		c.JSON(200, gin.H{
+			"code":   403,
+			"msg":    "没有权限",
+			"result": nil,
+		})
+		return
+	}
 	users := models.FindUsers()
 	c.JSON(200, gin.H{
 		"code":   200,
@@ -236,6 +267,17 @@ func GetKefuList(c *gin.Context) {
 }
 func DeleteKefuInfo(c *gin.Context) {
 	kefuId := c.Query("id")
+
+	kefu_role, ok := c.Get("kefu_role")
+	if !ok || kefu_role != "1" {
+		c.JSON(200, gin.H{
+			"code":   403,
+			"msg":    "没有权限",
+			"result": nil,
+		})
+		return
+	}
+
 	models.DeleteUserById(kefuId)
 	c.JSON(200, gin.H{
 		"code":   200,

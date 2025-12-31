@@ -1,11 +1,12 @@
 package tools
 
 import (
-	"github.com/sirupsen/logrus"
 	"log"
 	"os"
 	"path"
 	"time"
+
+	"github.com/sirupsen/logrus"
 )
 
 var logrusObj *logrus.Logger
@@ -29,8 +30,9 @@ func Logger() *logrus.Logger {
 	logger.SetFormatter(&logrus.TextFormatter{
 		TimestampFormat: "2006-01-02 15:04:05",
 	})
+
 	logrusObj = logger
-	return logger
+	return nil
 }
 func setOutputFile() (*os.File, error) {
 	now := time.Now()

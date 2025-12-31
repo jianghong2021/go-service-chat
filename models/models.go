@@ -2,10 +2,11 @@ package models
 
 import (
 	"fmt"
-	"github.com/jinzhu/gorm"
 	"goflylivechat/common"
 	"log"
 	"time"
+
+	"github.com/jinzhu/gorm"
 )
 
 var DB *gorm.DB
@@ -28,10 +29,9 @@ func Connect() error {
 	if err != nil {
 		log.Println(err)
 		panic("数据库连接失败!")
-		return err
 	}
 	DB.SingularTable(true)
-	DB.LogMode(true)
+	DB.LogMode(false)
 	DB.DB().SetMaxIdleConns(10)
 	DB.DB().SetMaxOpenConns(100)
 	DB.DB().SetConnMaxLifetime(59 * time.Second)

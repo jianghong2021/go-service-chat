@@ -1,9 +1,10 @@
 package middleware
 
 import (
-	"github.com/gin-gonic/gin"
 	"goflylivechat/tools"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 func JwtPageMiddleware(c *gin.Context) {
@@ -41,5 +42,6 @@ func JwtApiMiddleware(c *gin.Context) {
 	}
 	c.Set("kefu_id", userinfo["kefu_id"])
 	c.Set("kefu_name", userinfo["kefu_name"])
+	c.Set("kefu_role", userinfo["kefu_role"])
 
 }

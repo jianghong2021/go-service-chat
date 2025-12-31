@@ -1,0 +1,42 @@
+services:
+  go-app:
+    build: .
+    container_name: go-app
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USER=gofly
+      - DB_PASSWORD=gofly
+      - DB_NAME=goflychat
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: gofly
+      MYSQL_DATABASE: goflychat
+      MYSQL_PASSWORD: gofly
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/nginx.conf
+    depends_on:
+      - go-app
+
+volumes:
+  mysql-data:

@@ -125,13 +125,13 @@
                                 <div class="iconBtn iconfont icon-xiaolian" style="font-size: 24px;" @click.stop="showFaceIcon==true?showFaceIcon=false:showFaceIcon=true"></div>
                             </el-tooltip>
 
-                            <el-tooltip content="Upload Image" placement="top">
+                            <!-- <el-tooltip content="Upload Image" placement="top">
                                 <div class="iconBtn el-icon-picture" id="uploadImg" v-on:click="uploadImg('/uploadimg')" style="font-size: 24px;"></div>
                             </el-tooltip>
 
                             <el-tooltip content="Upload File" placement="top">
                                 <div class="iconBtn el-icon-upload" id="uploadFile" v-on:click="uploadFile('/uploadfile')" style="font-size: 26px;"></div>
-                            </el-tooltip>
+                            </el-tooltip> -->
                         </div>
 
                         <div class="clear"></div>
@@ -144,7 +144,7 @@
             <el-col :span="6" class="chatRight">
                 <div class="chatBg">
                     <el-tabs v-model="rightTabActive" @tab-click="handleTabClick">
-                        <el-tab-pane label="Visitor Info" name="visitorInfo">
+                        <el-tab-pane label="用户信息" name="visitorInfo">
                             <el-menu class="visitorInfo" v-show="visitor.visitor_id">
                                 <el-tooltip content="Click to blacklist" placement="left">
                                     <el-menu-item v-on:click="addIpblack(visitor.source_ip)" title="Click to blacklist" style="padding-left:2px;color: #666;">
@@ -184,7 +184,7 @@
                             </el-menu>
                         </el-tab-pane>
 
-                        <el-tab-pane label="Blacklist" name="blackList">
+                        <el-tab-pane label="黑名单" name="blackList">
                             <el-row v-for="item in ipBlacks" :key="item.id" class="">
                                 <el-tooltip content="Click to remove" placement="left">
                                     <div v-on:click="delIpblack(item.ip)" style="cursor:pointer" class="onlineUsers imgGray">

@@ -1,10 +1,11 @@
 package controller
 
 import (
-	"github.com/gin-gonic/gin"
 	"goflylivechat/models"
 	"goflylivechat/tools"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 // @Summary User Authentication API
@@ -37,6 +38,7 @@ func LoginCheckPass(c *gin.Context) {
 	userinfo := map[string]interface{}{
 		"kefu_name":   info.Name,
 		"kefu_id":     info.ID,
+		"kefu_role":   info.Role,
 		"create_time": time.Now().Unix(),
 	}
 

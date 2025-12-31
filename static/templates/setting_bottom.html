@@ -29,43 +29,7 @@
 
             avatarUrl:"",
             chatEndpoint: "",
-            configList:[
-                    {
-                        "conf_name": "Announcement",
-                        "conf_key": "AllNotice",
-                        "conf_value":"",
-                    },
-                    {
-
-                        "conf_name": "Offline Message",
-                        "conf_key": "OfflineMessage",
-                        "conf_value":"",
-                    },
-                    {
-
-                        "conf_name": "Welcome Message",
-                        "conf_key": "WelcomeMessage",
-                        "conf_value":"",
-                    },
-                    {
-
-                        "conf_name": "Email Address (SMTP)",
-                        "conf_key": "NoticeEmailSmtp",
-                        "conf_value":"",
-                    },
-                    {
-
-                        "conf_name": "Email Account",
-                        "conf_key": "NoticeEmailAddress",
-                        "conf_value":"",
-                    },
-                    {
-
-                        "conf_name": "Email Password (SMTP)",
-                        "conf_key": "NoticeEmailPassword",
-                        "conf_value":"",
-                    }
-            ],
+            
         },
 
         methods: {
@@ -77,7 +41,7 @@
 
             //初始化数据
             initInfo(){
-                this.getConfigList();
+                
             },
             sendAjax(url,method,params,callback){
                 let _this=this;
@@ -102,29 +66,6 @@
                         _this.fullscreenLoading=false
 
                     }
-                });
-            },
-            getConfigList(){
-                let _this=this;
-                this.sendAjax("/configs","get",{},function(result){
-                    for(let index in _this.configList){
-                        for(let item of result){
-                            if(_this.configList[index]['conf_key']==item['conf_key']){
-                                _this.configList[index]["conf_value"]=item["conf_value"];
-                            }
-                        }
-                    }
-                });
-            },
-            //设置配置项
-            setConfigItem(key,value){
-                let _this=this;
-                this.sendAjax("/config","POST",{key:key,value:value},function(result){
-                    _this.getConfigList();
-                    _this.$message({
-                        message: "success！",
-                        type: 'success'
-                    });
                 });
             },
 
