@@ -1,0 +1,6 @@
+.idea
+imaptool.exe
+config/mysql.json
+logs
+static/upload
+install.lock

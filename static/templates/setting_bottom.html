@@ -1,0 +1,247 @@
+{{define "setting_bottom"}}
+<script>
+    if (typeof ACTION=="undefined"){
+        ACTION="{{.action}}";
+    }
+</script>
+<script>
+    var app=new Vue({
+        el: '#app',
+        delimiters:["<{","}>"],
+        data: {
+            host:getBaseUrl(),
+            deployCode:"",
+            kefuInfo:{},
+            account: {
+                username: "",
+                password: "",
+            },
+
+            kefuForm:{
+                id:"",
+                name:"",
+                password:"",
+                avator:"",
+                nickname:"",
+                role_name:"",
+                role_id:"",
+            },
+
+            avatarUrl:"",
+            chatEndpoint: "",
+            configList:[
+                    {
+                        "conf_name": "Announcement",
+                        "conf_key": "AllNotice",
+                        "conf_value":"",
+                    },
+                    {
+
+                        "conf_name": "Offline Message",
+                        "conf_key": "OfflineMessage",
+                        "conf_value":"",
+                    },
+                    {
+
+                        "conf_name": "Welcome Message",
+                        "conf_key": "WelcomeMessage",
+                        "conf_value":"",
+                    },
+                    {
+
+                        "conf_name": "Email Address (SMTP)",
+                        "conf_key": "NoticeEmailSmtp",
+                        "conf_value":"",
+                    },
+                    {
+
+                        "conf_name": "Email Account",
+                        "conf_key": "NoticeEmailAddress",
+                        "conf_value":"",
+                    },
+                    {
+
+                        "conf_name": "Email Password (SMTP)",
+                        "conf_key": "NoticeEmailPassword",
+                        "conf_value":"",
+                    }
+            ],
+        },
+
+        methods: {
+            //跳转
+            openUrl(url){
+                //window.location.href=url;
+                this.iframeUrl=url;
+            },
+
+            //初始化数据
+            initInfo(){
+                this.getConfigList();
+            },
+            sendAjax(url,method,params,callback){
+                let _this=this;
+                $.ajax({
+                    type: method,
+                    url: url,
+                    data:params,
+                    headers: {
+                        "token": localStorage.getItem("token")
+                    },
+                    success: function(data) {
+                        if(data.code!=200){
+                            _this.$message({
+                                message: data.msg,
+                                type: 'error'
+                            });
+                        }else if(data.result!=null){
+                            callback(data.result);
+                        }else{
+                            callback(data);
+                        }
+                        _this.fullscreenLoading=false
+
+                    }
+                });
+            },
+            getConfigList(){
+                let _this=this;
+                this.sendAjax("/configs","get",{},function(result){
+                    for(let index in _this.configList){
+                        for(let item of result){
+                            if(_this.configList[index]['conf_key']==item['conf_key']){
+                                _this.configList[index]["conf_value"]=item["conf_value"];
+                            }
+                        }
+                    }
+                });
+            },
+            //设置配置项
+            setConfigItem(key,value){
+                let _this=this;
+                this.sendAjax("/config","POST",{key:key,value:value},function(result){
+                    _this.getConfigList();
+                    _this.$message({
+                        message: "success！",
+                        type: 'success'
+                    });
+                });
+            },
+
+            setUser(){
+                let _this=this;
+                this.sendAjax("/kefuinfo","POST",{
+                    id:_this.kefuInfo.uid,
+                    name:_this.kefuInfo.username,
+                    nickname:_this.kefuInfo.nickname,
+                    avator:_this.kefuInfo.avator,
+                    password:_this.kefuInfo.password,
+                },function(result){
+                    _this.$message({
+                        message: "success",
+                        type: 'success'
+                    });
+                });
+            },
+            handleAvatarSuccess(res, file) {
+                console.log(res,file);
+                if(res.code!=200){
+                    _this.$message({
+                        message: res.msg,
+                        type: 'error'
+                    });
+                    return;
+                }
+                this.kefuInfo.avator = '/'+res.result.path;
+            },
+            beforeAvatarUpload(file) {
+                var isLt2M = file.size / 1024 / 1024 < 1;
+                if (!isLt2M) {
+                    this.$message.error('上传头像图片大小不能超过 1MB!');
+                }
+                return isLt2M;
+            },
+            GetRequest() {
+                var str = location.href
+                var num = str.indexOf("#");
+                if(num <0){
+                    return "";
+                }
+                str = str.substr(num + 1);
+                return str;
+            },
+            copyText(text){
+                copyText(text);
+                this.$message({
+                    message: "success",
+                    type: 'success'
+                });
+            },
+            //获取客服信息
+            getKefuInfo(){
+                let _this=this;
+                $.ajax({
+                    type:"get",
+                    url:"/kefuinfo",
+                    headers:{
+                        "token":localStorage.getItem("token")
+                    },
+                    success: function(data) {
+                        if(data.result.username==""){
+                            window.location.href="/login";
+                        }
+                        if(data.code==200 && data.result!=null){
+                            _this.kefuInfo=data.result;
+                            _this.chatEndpoint=window.location.origin + '/livechat?user_id='+_this.kefuInfo.username;
+                        }
+
+                        _this.deployCode = `
+<script>
+  (function(global, document, scriptUrl, callback) {
+    const head = document.getElementsByTagName('head')[0];
+    const script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = scriptUrl + "/static/js/chat-widget.js";
+    script.onload = script.onreadystatechange = function () {
+      if (!this.readyState || this.readyState === "loaded" || this.readyState === "complete") {
+        callback(scriptUrl);
+      }
+    };
+    head.appendChild(script);
+  })(window, document, "${_this.host}", function(baseUrl) {
+    CHAT_WIDGET.initialize({
+      API_URL: baseUrl,
+      AGENT_ID: "${_this.kefuInfo.username}",
+    });
+  });
+<\/script>
+`.trim();
+
+
+                    }
+                });
+            },
+            openChatWindow(url) {
+                // 在新窗口打开聊天页面
+                window.open(url, '_blank');
+            }
+        },
+
+        mounted:function(){
+            var urlParam=this.GetRequest();
+            if(urlParam!=""){
+                this.iframeUrl=urlParam;
+            }
+
+            this.getKefuInfo();
+            this.initInfo();
+
+        },
+        created: function () {
+
+        }
+    })
+
+</script>
+</html>
+{{end}}

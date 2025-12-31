@@ -1,0 +1,176 @@
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="renderer" content="webkit">
+    <title>Open Source Customer Support System</title>
+    <link rel="stylesheet" href="/static/cdn/element-ui/2.15.1/theme-chalk/index.min.css">
+    <script src="/static/cdn/vue/2.6.11/vue.min.js"></script>
+    <script src="/static/cdn/element-ui/2.15.1/index.js"></script>
+    <script src="/static/cdn/jquery/3.6.0/jquery.min.js"></script>
+
+    <link rel="stylesheet" href="/static/css/common.css">
+    <script src="/assets/js/functions.js"></script>
+    <style>
+        html,
+        body {
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        body {
+            overflow: hidden;
+            background-color: #f5f5f5;
+        }
+
+        .el-aside{
+            height: 100%;
+            background: #fff;
+            border: solid 1px #e6e6e6;
+        }
+        .el-aside .el-menu{
+            border-right: none;
+        }
+        .mainLogo{
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .mainMain{
+            background: #fff;
+            margin-left: 10px;
+            margin-bottom: 60px;
+        }
+        .el-card__body{
+            cursor: pointer;
+        }
+
+    </style>
+
+</head>
+<body class="text-center">
+<div id="app">
+    <template>
+        <div class="mainLeftMenu">
+            <div style="margin: 20px auto;">
+                <el-badge :type="onlineType" is-dot class="item">
+                    <el-avatar class="mainLogo" title="Customer Support" :size="45" :src="adminAvator"></el-avatar>
+                </el-badge>
+            </div>
+            <div class="menuLeftItem active" v-on:click="openIframeUrl('/pannel')">
+                <i class="el-icon-platform-eleme"></i>
+                <span slot="title">Dashboard</span>
+            </div>
+
+            <div class="menuLeftItem" v-on:click="haveNewMessage='';openIframeUrl('/chat_main')">
+                <el-badge :value="haveNewMessage" class="item">
+                    <i class="el-icon-chat-dot-round"></i>
+                </el-badge>
+                <span slot="title">Chat</span>
+            </div>
+
+            <div style="display: none" class="menuLeftItem" v-on:click="openIframeUrl('/setting_deploy')">
+                <i class="el-icon-notebook-2"></i>
+                <span slot="title">Integration</span>
+            </div>
+
+            <div class="menuLeftItem" v-on:click="openIframeUrl('/users')">
+                <i class="el-icon-user"></i>
+                <span slot="title">Users</span>
+            </div>
+
+            <div class="menuLeftItem" v-on:click="openIframeUrl('/setting')">
+                <i class="el-icon-setting"></i>
+                <span slot="title">Settings</span>
+            </div>
+
+            <div class="menuLeftItem menuLeftItemLogout" v-on:click="logout()">
+                <i class="el-icon-switch-button"></i>
+                <span slot="title">Logout</span>
+            </div>
+        </div>
+        <div class="mainRight">
+            <iframe class="mainIframe" v-bind:src="iframeUrl" frameborder="0"></iframe>
+        </div>
+    </template>
+</div>
+</body>
+<script>
+    new Vue({
+        el: '#app',
+        delimiters:["<{","}>"],
+        data: {
+            window:window,
+            mailTotal:0,
+            adminAvator:"",
+            adminRole:"",
+            onlineType:"success",
+            haveNewMessage:"",
+            iframeUrl:"/pannel",
+        },
+        methods: {
+            focusWindow(){
+                var _this=this;
+                window.addEventListener('message',function(e){
+                    var redata=e.data;
+                    if(!redata.name||!redata.body){
+                        return;
+                    }
+                    notify(redata.name, {
+                        body: redata.body,
+                        icon: redata.icon
+                    }, function(notification) {
+                        window.focus();
+                        notification.close();
+                        _this.openIframeUrl("/chat_main");
+                    });
+                });
+            },
+            openIframeUrl(url){
+                this.iframeUrl=url;
+            },
+            logout(){
+                localStorage.removeItem("token");
+                this.openIframeUrl('/login');
+            },
+            openUrl(url){
+                window.location.href=url;
+            },
+            GetQueryString(name){
+                var reg = new RegExp("(^|&)"+ name +"=([^&]*)(&|$)");
+                var r = window.location.search.substr(1).match(reg);
+                if(r!=null)return  unescape(r[2]); return null;
+            },
+            checkAuth(){
+                let _this=this;
+                $.ajax({
+                    type:"GET",
+                    url:"/kefuinfo",
+                    headers:{
+                        "token":localStorage.getItem("token")
+                    },
+                    success: function(data) {
+                        if (data.code != 200) {
+                            window.location.href="/login";
+                        } else {
+                            _this.adminAvator=data.result.avator;
+                            _this.iframeUrl = "/pannel";
+                        }
+                    }
+                });
+            }
+        },
+        created: function () {
+            this.checkAuth();
+            this.focusWindow();
+            $(function(){
+                $("body").on("click",".menuLeftItem",function(){
+                    $(".menuLeftItem").removeClass("active");
+                    $(this).addClass("active");
+                });
+            })
+        }
+    })
+    $(window).bind("focus",function(e){
+        //alert(1);
+    });
+</script>
+</html>

@@ -1,0 +1,591 @@
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0;" name="viewport" />
+    <meta name="keywords" content="Golang Open Source LiveChat Software"/>
+    <meta name="description" content="Golang Open Source LiveChat Software"/>
+    <title>Live Chat Support</title>
+    <link rel="stylesheet" href="/static/cdn/element-ui/2.15.1/theme-chalk/index.min.css">
+    <script src="/static/cdn/vue/2.6.11/vue.min.js"></script>
+    <script src="/static/cdn/element-ui/2.15.1/index.js"></script>
+    <script src="/static/cdn/jquery/3.6.0/jquery.min.js"></script>
+
+    <script src="/static/js/functions.js?v=fgffdwersdccvcbv"></script>
+    <script src="/static/js/reconnecting-websocket.min.js"></script>
+    <link rel="stylesheet" href="/static/css/common.css?v=sdsderfrgfgdfdf" />
+    <link rel="stylesheet" href="/static/css/icono.min.css" />
+    <link rel="stylesheet" href="/static/css/icon/iconfont.css?v=fgjlgfda"/>
+</head>
+<body class="visitorBody">
+<div id="app" class="chatCenter">
+    <template>
+        <!--Customer Service Code-->
+        <div class="chatEntTitle" v-show="!isIframe">
+            <el-badge type="success" is-dot class="item">
+                <el-avatar class="chatEntTitleLogo" :size="35" :src="kefuInfo.avatar"></el-avatar>
+            </el-badge>
+            <div>
+                <div>Live Chat Support</div>
+            </div>
+        </div>
+        <div class="chatEntBox">
+            <div class="chatContext chatVisitorPage">
+                <div class="chatBox">
+                    <div class="chatNotice" v-on:click="getHistoryMessage" v-show="showLoadMore">
+                        <a href="javascript:;" class="chatNoticeContent" style="color: #07a9fe;">Load more messages</a>
+                    </div>
+                    <el-row :gutter="2" v-for="v in msgList" v-bind:class="{'chatBoxMe': v.is_kefu==false}">
+                        <div class="chatTime" v-bind:class="{'chatTimeHide': v.show_time==false}"><span><{v.time}></span></div>
+                        <div v-if="v.is_kefu==true" style="display: flex;">
+                            <el-avatar style="margin-right:10px;flex-shrink: 0;" :size="36" :src="v.avator"></el-avatar>
+                            <div class="chatMsgContent">
+                                <div class="chatContent chatContent2 replyContentBtn" v-html="v.content"></div>
+                            </div>
+                        </div>
+                        <div class="kefuMe" v-if="v.is_kefu==false" style="display: flex;justify-content: flex-end;">
+                            <div class="chatContent chatContent2 replyContentBtn" v-html="v.content"></div>
+                            <el-avatar style="margin-left:10px;flex-shrink: 0;" :size="36" :src="v.avator"></el-avatar>
+                        </div>
+                        <div class="clear"></div>
+                    </el-row>
+                </div>
+            </div>
+            <div class="chatBoxSend">
+                <div class="visitorIconBox">
+                    <el-tooltip content="Send emoji" placement="top">
+                        <div class="iconBtn iconfont icon-xiaolian" style="margin-left:10px;font-size: 24px;cursor: pointer;" @click.stop="showFaceIcon==true?showFaceIcon=false:showFaceIcon=true"></div>
+                    </el-tooltip>
+
+                    <el-tooltip content="Upload image" placement="top">
+                        <div class="iconBtn el-icon-picture" id="uploadImg" v-on:click="uploadImg('/uploadimg')" style="font-size: 24px;"></div>
+                    </el-tooltip>
+                    <el-tooltip content="Upload file" placement="top">
+                        <div class="iconBtn el-icon-upload" id="uploadFile" v-on:click="uploadFile('/uploadfile')" style="font-size: 26px;"></div>
+                    </el-tooltip>
+
+                    <div style="display: none" title="Emoji" class="icono-smile visitorIconBtns visitorFaceBtn"></div>
+
+                    <div class="clear"></div>
+                </div>
+                <div class="faceBox visitorFaceBox" v-show="showFaceIcon">
+                    <ul class="faceBoxList">
+                        <li v-on:click="faceIconClick(i)" class="faceIcon" v-for="(v,i) in face" :title="v.name"><img :src=v.path></li>
+                    </ul>
+                    <div class="clear"></div>
+                </div>
+                <el-input show-word-limit maxlength="100" :rows="2" type="textarea" resize="none" class="visitorEditorArea" @focus="scrollBottom;showIconBtns=false" @blur="scrollBottom;showIconBtns=false" v-model="messageContent" v-on:keyup.enter.native="chatToUser">
+                </el-input>
+                <el-button type="primary" size="mini" class="visitorEditorBtn" :disabled="sendDisabled||messageContent==''" v-on:click="chatToUser();showIconBtns=false">Send</el-button>
+            </div>
+        </div>
+        <div class="chatArticle">
+            <h3 class="hotQuestionTitle">Announcements</h3>
+            <div class="allNotice" v-html><{kefuInfo.allNotice}></div>
+        </div>
+
+        <audio id="chatMessageAudio"></audio>
+        <audio id="chatMessageSendAudio"></audio>
+    </template>
+</div>
+</body>
+<script>
+    var KEFU_ID=getQuery("user_id");
+    var REFER='{{.Refer}}';
+</script>
+<script>
+    new Vue({
+        el: '#app',
+        delimiters:["<{","}>"],
+        data: {
+            window:window,
+            server:getWsBaseUrl()+"/ws_visitor",
+            socket:null,
+            msgList:[],
+            msgListNum:[],
+            messageContent:"",
+            chatTitle:"Connecting...",
+            visitor:{},
+            face:[],
+            showKfonline:false,
+            socketClosed:false,
+            focusSendConn:false,
+            timer:null,
+            sendDisabled:false,
+            showIconBtns:false,
+            showFaceIcon:false,
+            isIframe:false,
+            kefuInfo:{},
+            showLoadMore:false,
+            messages:{
+                page:1,
+                pagesize:5,
+                list:[],
+            },
+        },
+        methods: {
+            initConn:function() {
+                let socket = new ReconnectingWebSocket(this.server+"?visitor_id="+this.visitor.visitor_id);
+                this.socket = socket
+                this.socket.onmessage = this.OnMessage;
+                this.socket.onopen = this.OnOpen;
+                this.socket.onclose = this.OnClose;
+                this.ping();
+            },
+            OnOpen:function() {
+                console.log("ws:onopen");
+                this.getNotice();
+                this.socketClosed=false;
+                this.focusSendConn=false;
+            },
+            OnMessage:function(e) {
+                console.log("ws:onmessage");
+                this.socketClosed=false;
+                this.focusSendConn=false;
+                const redata = JSON.parse(e.data);
+                if (redata.type == "kfOnline") {
+                    let msg = redata.data
+                    if(this.showKfonline && this.visitor.to_id==msg.id){
+                        return;
+                    }
+                    this.visitor.to_id=msg.id;
+                    this.showTitle(msg.name+", is chatting with you");
+                    this.scrollBottom();
+                    this.showKfonline=true;
+                }
+                if (redata.type == "transfer") {
+                    var kefuId = redata.data
+                    if(!kefuId){
+                        return;
+                    }
+                    this.visitor.to_id=kefuId;
+                }
+                if (redata.type == "notice") {
+                    let msg = redata.data
+                    if(!msg){
+                        return;
+                    }
+                    this.chatTitle=msg
+                    $(".chatBox").append("<div class=\"chatTime\">"+this.chatTitle+"</div>");
+                    this.scrollBottom();
+                }
+                if (redata.type == "message") {
+                    let msg = redata.data
+                    this.visitor.to_id=msg.id;
+
+                    let content = {}
+                    content.avator = msg.avator;
+                    content.name = msg.name;
+                    content.content =replaceContent(msg.content);
+                    content.is_kefu = true;
+                    content.time = msg.time;
+                    this.msgList.push(content);
+
+                    notify(msg.name, {
+                        body: msg.content,
+                        icon: msg.avator
+                    },function(notification) {
+                        window.focus();
+                        notification.close();
+                    });
+                    this.scrollBottom();
+                    flashTitle();
+                    clearInterval(this.timer);
+                    this.alertSound();
+                }
+                if (redata.type == "close") {
+                    this.chatTitle="The conversation has ended";
+                    $(".chatBox").append("<div class=\"chatTime\">"+this.chatTitle+"</div>");
+                    this.scrollBottom();
+                    this.socket.close();
+                    this.focusSendConn=true;
+                }
+                if (redata.type == "force_close") {
+                    this.chatTitle="The conversation was terminated by the agent";
+                    $(".chatBox").append("<div class=\"chatTime\">"+this.chatTitle+"</div>");
+                    this.scrollBottom();
+                    this.socket.close();
+                    this.socketClosed=true;
+                }
+                if (redata.type == "auto_close") {
+                    this.chatTitle="The conversation timed out due to inactivity";
+                    $(".chatBox").append("<div class=\"chatTime\">"+this.chatTitle+"</div>");
+                    this.scrollBottom();
+                    this.socket.close();
+                    this.socketClosed=true;
+                }
+                window.parent.postMessage(redata,"*");
+            },
+            chatToUser:function() {
+                var messageContent=this.messageContent.trim("\r\n");
+                messageContent=messageContent.replace("\n","");
+                messageContent=messageContent.replace("\r\n","");
+                if(messageContent==""||messageContent=="\r\n"){
+                    this.messageContent="";
+                    return;
+                }
+                this.messageContent=messageContent;
+                if(this.socketClosed){
+                    this.$message({
+                        message: 'Connection closed! Please refresh the page',
+                        type: 'warning'
+                    });
+                    return;
+                }
+                this.sendDisabled=true;
+                let _this=this;
+
+                let content = {}
+                content.avator=_this.visitor.avator;
+                content.content = replaceContent(_this.messageContent);
+                content.name = _this.visitor.name;
+                content.is_kefu = false;
+                content.time = _this.getNowDate();
+                content.show_time=false;
+                _this.msgList.push(content);
+                _this.scrollBottom();
+
+                let mes = {};
+                mes.type = "visitor";
+                mes.content = this.messageContent;
+                mes.from_id = this.visitor.visitor_id;
+                mes.to_id = this.visitor.to_id;
+                mes.content = this.messageContent;
+                $.post("/2/message",mes,function(res){
+                    _this.sendDisabled=false;
+                    if(res.code!=200){
+                        _this.msgList.pop();
+                        _this.$message({
+                            message: res.msg,
+                            type: 'error'
+                        });
+                        return;
+                    }
+                    _this.messageContent = "";
+                    clearInterval(_this.timer);
+                    _this.sendSound();
+                });
+
+            },
+            OnClose:function() {
+                console.log("ws:onclose");
+                this.focusSendConn=true;
+            },
+            getUserInfo:function(){
+                let obj=this.getCache("visitor_"+KEFU_ID);
+                var visitor_id=""
+                var to_id=KEFU_ID;
+                if(obj){
+                    visitor_id=obj.visitor_id;
+                }
+                let _this=this;
+                var extra=getQuery("extra");
+                $.post("/visitor_login",{visitor_id:visitor_id,refer:REFER,to_id:to_id,extra:extra},function(res){
+                    if(res.code!=200){
+                        _this.$message({
+                            message: res.msg,
+                            type: 'error'
+                        });
+                        _this.sendDisabled=true;
+                        return;
+                    }
+                    _this.visitor=res.result;
+                    _this.getHistoryMessage();
+                    _this.setCache("visitor_"+KEFU_ID,res.result);
+                    _this.initConn();
+                });
+            },
+            getHistoryMessage:function(){
+                let params={
+                    page:this.messages.page,
+                    pagesize: this.messages.pagesize,
+                    visitor_id: this.visitor.visitor_id,
+                }
+                let _this=this;
+                $.get("/2/messagesPages",params,function(res){
+                    let msgList=res.result.list;
+                    if(msgList.length>=_this.messages.pagesize){
+                        _this.showLoadMore=true;
+                    }else{
+                        _this.showLoadMore=false;
+                    }
+                    for(let i in msgList){
+                        let item = msgList[i];
+                        let content = {}
+                        if (item["mes_type"] == "kefu") {
+                            item.is_kefu = true;
+                            item.avator=item["kefu_avator"];
+
+                        } else {
+                            item.is_kefu = false;
+                            item.avator=item["visitor_avator"];
+                        }
+                        item.time = item["create_time"];
+                        item.content=replaceContent(item["content"]);
+                        _this.msgList.unshift(item);
+                    }
+                    if(_this.messages.page==1){
+                        _this.scrollBottom();
+                    }
+                    _this.messages.page++;
+                });
+            },
+            scrollBottom:function(){
+                var _this=this;
+                this.$nextTick(function(){
+                    $('.chatVisitorPage').scrollTop($(".chatVisitorPage")[0].scrollHeight);
+                });
+            },
+            getNowDate : function() {
+                var d = new Date(new Date());
+                return d.getFullYear() + '-' + this.digit(d.getMonth() + 1) + '-' + this.digit(d.getDate())
+                    + ' ' + this.digit(d.getHours()) + ':' + this.digit(d.getMinutes()) + ':' + this.digit(d.getSeconds());
+            },
+            digit : function (num) {
+                return num < 10 ? '0' + (num | 0) : num;
+            },
+            setCache : function (key,obj){
+                if(navigator.cookieEnabled&&typeof window.localStorage !== 'undefined'){
+                    localStorage.setItem(key, JSON.stringify(obj));
+                }
+            },
+            getCache : function (key){
+                if(navigator.cookieEnabled&&typeof window.localStorage !== 'undefined') {
+                    return JSON.parse(localStorage.getItem(key));
+                }
+            },
+            getNotice : function (){
+                let _this=this;
+                $.get("/notice?kefu_id="+KEFU_ID,function(res) {
+                    var code=res.code;
+                    if(code!=200) return;
+                    _this.kefuInfo=res.result;
+                    _this.showTitle(_this.kefuInfo.nickname+" at your service.");
+                    if(!_this.kefuInfo.welcome) return;
+                    var msg={
+                        content:replaceContent(_this.kefuInfo.welcome),
+                        avator:_this.kefuInfo.avatar,
+                        name :_this.kefuInfo.nickname,
+                        time:_this.getNowDate(),
+                        is_kefu:true,
+                    }
+                    _this.msgList.push(msg);
+                    _this.scrollBottom();
+                    _this.alertSound();
+                });
+            },
+            initCss:function(){
+                var _this=this;
+                $(function () {
+                    var faces=placeFace();
+                    $.each(faceTitles, function (index, item) {
+                        _this.face.push({"name":item,"path":faces[item]});
+                    });
+
+                    var windheight = $(window).height();
+                    $(window).resize(function(){
+                        var docheight = $(window).height();
+                        $('body').scrollTop(99999999);
+                    });
+                });
+            },
+            ping:function(){
+                let _this=this;
+                let mes = {}
+                mes.type = "ping";
+                mes.data = "visitor:"+_this.visitor.visitor_id;
+                setInterval(function () {
+                    if(_this.socket!=null){
+                        _this.socket.send(JSON.stringify(mes));
+                    }
+                },10000);
+            },
+            init:function(){
+                var _this=this;
+                this.initCss();
+                $('body').click(function(){
+                    clearFlashTitle();
+                    window.parent.postMessage({type:"focus"},"*");
+                    $('.faceBox').hide();
+                });
+                window.onfocus = function () {
+                    clearFlashTitle();
+                    window.parent.postMessage({type:"focus"},"*");
+                    if(_this.socketClosed){
+                        return;
+                    }
+                    if(!_this.focusSendConn){
+                        return;
+                    }
+                    _this.initConn();
+                    _this.scrollBottom();
+                }
+            },
+            faceIconClick:function(index){
+                $('.faceBox').hide();
+                this.messageContent+="face"+this.face[index].name;
+            },
+            uploadImg:function (url){
+                let _this=this;
+                $('#uploadImg').after('<input type="file" accept="image/gif,image/jpeg,image/jpg,image/png" id="uploadImgFile" name="file" style="display:none" >');
+                $("#uploadImgFile").click();
+                $("#uploadImgFile").change(function (e) {
+                    var formData = new FormData();
+                    var file = $("#uploadImgFile")[0].files[0];
+                    formData.append("imgfile",file);
+                    filter(file) && $.ajax({
+                        url: url || '',
+                        type: "post",
+                        data: formData,
+                        contentType: false,
+                        processData: false,
+                        dataType: 'JSON',
+                        mimeType: "multipart/form-data",
+                        success: function (res) {
+                            if(res.code!=200){
+                                _this.$message({
+                                    message: res.msg,
+                                    type: 'error'
+                                });
+                            }else{
+                                _this.messageContent+='img[/' + res.result.path + ']';
+                                _this.chatToUser();
+                            }
+                        },
+                        error: function (data) {
+                            console.log(data);
+                        }
+                    });
+                });
+            },
+            uploadFile:function (url){
+                let _this=this;
+                $('#uploadFile').after('<input type="file" id="uploadRealFile" name="file2" style="display:none" >');
+                $("#uploadRealFile").click();
+                $("#uploadRealFile").change(function (e) {
+                    var formData = new FormData();
+                    var file = $("#uploadRealFile")[0].files[0];
+                    formData.append("realfile",file);
+                    console.log(formData);
+                    $.ajax({
+                        url: url || '',
+                        type: "post",
+                        data: formData,
+                        contentType: false,
+                        processData: false,
+                        dataType: 'JSON',
+                        mimeType: "multipart/form-data",
+                        success: function (res) {
+                            if(res.code!=200){
+                                _this.$message({
+                                    message: res.msg,
+                                    type: 'error'
+                                });
+                            }else{
+                                var data=JSON.stringify({
+                                    name:res.result.name,
+                                    ext:res.result.ext,
+                                    size:res.result.size,
+                                    path:'/' + res.result.path,
+                                })
+                                _this.messageContent+='attachment['+data+']';
+                                _this.chatToUser();
+                            }
+                        },
+                        error: function (data) {
+                            console.log(data);
+                        }
+                    });
+                });
+            },
+            onPasteUpload:function(event){
+                let items = event.clipboardData && event.clipboardData.items;
+                let file = null
+                if (items && items.length) {
+                    for (var i = 0; i < items.length; i++) {
+                        if (items[i].type.indexOf('image') !== -1) {
+                            file = items[i].getAsFile()
+                        }
+                    }
+                }
+                if (!file) {
+                    return;
+                }
+                let _this=this;
+                var formData = new FormData();
+                formData.append('imgfile', file);
+                $.ajax({
+                    url: '/uploadimg',
+                    type: "post",
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    dataType: 'JSON',
+                    mimeType: "multipart/form-data",
+                    success: function (res) {
+                        if(res.code!=200){
+                            _this.$message({
+                                message: res.msg,
+                                type: 'error'
+                            });
+                        }else{
+                            _this.messageContent+='img[/' + res.result.path + ']';
+                            _this.chatToUser();
+                        }
+                    },
+                    error: function (data) {
+                        console.log(data);
+                    }
+                });
+            },
+            alertSound:function(){
+                alertSound("chatMessageAudio",'/static/images/alert2.ogg');
+            },
+            sendSound:function(){
+                alertSound("chatMessageSendAudio",'/static/images/sent.ogg');
+            },
+            sendAjax:function(url,method,params,callback){
+                let _this=this;
+                $.ajax({
+                    type: method,
+                    url: url,
+                    data:params,
+                    error:function(res){
+                        var data=JSON.parse(res.responseText);
+                        console.log(data);
+                        if(data.code!=200){
+                            _this.$message({
+                                message: data.msg,
+                                type: 'error'
+                            });
+                        }
+                    },
+                    success: function(data) {
+                        if(data.code!=200){
+                            _this.$message({
+                                message: data.msg,
+                                type: 'error'
+                            });
+                        }else if(data.result!=null){
+                            callback(data.result);
+                        }else{
+                            callback(data);
+                        }
+                    }
+                });
+            },
+            showTitle:function(title){
+                $(".chatBox").append("<div class='chatNotice'><div class=\"chatNoticeContent\"><span>"+title+"</span></div></div>");
+                this.scrollBottom();
+            },
+        },
+        mounted:function() {
+            document.addEventListener('paste', this.onPasteUpload)
+            document.addEventListener('scroll',this.textareaBlur)
+        },
+        created: function () {
+            this.init();
+            this.getUserInfo();
+        }
+    })
+</script>
+</html>
