@@ -162,7 +162,7 @@ func PostKefuRegister(c *gin.Context) {
 	name := c.PostForm("username")
 	password := c.PostForm("password")
 	nickname := c.PostForm("nickname")
-	role := c.PostForm("role")
+	// role := c.PostForm("role")
 	avatar := "/static/images/4.jpg"
 
 	kefu_role, ok := c.Get("kefu_role")
@@ -194,7 +194,7 @@ func PostKefuRegister(c *gin.Context) {
 		return
 	}
 
-	userID := models.CreateUser(name, tools.Md5(password), avatar, nickname, role)
+	userID := models.CreateUser(name, tools.Md5(password), avatar, nickname, "0")
 	if userID == 0 {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"code":   500,
@@ -273,6 +273,16 @@ func DeleteKefuInfo(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"code":   403,
 			"msg":    "没有权限",
+			"result": nil,
+		})
+		return
+	}
+
+	kefu_id, ok := c.Get("kefu_id")
+	if ok && kefu_id == kefuId {
+		c.JSON(200, gin.H{
+			"code":   403,
+			"msg":    "不能删除当前登录账号",
 			"result": nil,
 		})
 		return

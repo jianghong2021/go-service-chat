@@ -1,7 +1,7 @@
 {
-	"Server":"127.0.0.1",
+	"Server":"mysql",
 	"Port":"3306",
 	"Database":"goflychat",
-	"Username":"root",
-	"Password":"root"
+	"Username":"gofly",
+	"Password":"gofly"
 }

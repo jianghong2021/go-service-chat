@@ -120,10 +120,8 @@
                         <el-table-column fixed="right" label="操作" width="200">
                             <template slot-scope="{row}">
                                 <el-button type="primary" icon="el-icon-edit" circle @click="editUser(row)"></el-button>
-                                <el-popconfirm title="是否删除此号">
-                                    <el-button type="danger" icon="el-icon-delete" circle
-                                        @click="deleteUser(row)"></el-button>
-                                </el-popconfirm>
+                                <el-button v-if="row.role =='0'" type="danger" icon="el-icon-delete" circle
+                                    @click="deleteUser(row)"></el-button>
 
                             </template>
                         </el-table-column>
@@ -140,12 +138,12 @@
                         <el-form-item prop="password">
                             <el-input show-password v-model.trim="form.password" placeholder="密码"></el-input>
                         </el-form-item>
-                        <el-form-item prop="role">
+                        <!-- <el-form-item prop="role">
                             <el-radio-group v-model="form.role">
                                 <el-radio label="0">客服</el-radio>
                                 <el-radio label="1">管理员</el-radio>
                             </el-radio-group>
-                        </el-form-item>
+                        </el-form-item> -->
                         <el-form-item prop="rePassword">
                             <el-input show-password v-model.trim="form.rePassword" placeholder="确认密码"></el-input>
                         </el-form-item>
@@ -341,8 +339,50 @@
                     this.form.avator = user.avator;
                     this.popup = true;
                 },
+                deleteUserHandler(user) {
+                    const self = this;
+                    $.post({
+                        url: '/u/delete?id='+user.id,
+                        headers: {
+                            "token": localStorage.getItem("token")
+                        },
+                        data: this.form,
+                        success(response) {
+                            if (response.code === 200) {
+                                self.$message({
+                                    message: '删除成功!',
+                                    type: 'success'
+                                });
+                                self.popup = false;
+                                self.loadUsers();
+                            } else {
+                                self.$message({
+                                    message: response.msg || 'Registration failed',
+                                    type: 'error'
+                                });
+                            }
+                        },
+                        error(err) {
+                            self.$message({
+                                message: err.message || 'Unknown error',
+                                type: 'error'
+                            });
+                        }
+                    });
+                },
                 deleteUser(user) {
-
+                    this.$confirm('即将删除此账号, 是否继续?', '提示', {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        type: 'warning'
+                    }).then(() => {
+                        this.deleteUserHandler(user);
+                    }).catch(() => {
+                        this.$message({
+                            type: 'info',
+                            message: '已取消删除'
+                        });
+                    });
                 }
             },
             created() {
