@@ -40,7 +40,12 @@ func UpdateUser(id string, name string, password string, avator string, nickname
 	if password != "" {
 		user.Password = password
 	}
-	DB.Model(&User{}).Where("id = ?", id).Update(user)
+	if id != "" {
+		DB.Model(&User{}).Where("id = ?", id).Update(user)
+	} else {
+		DB.Model(&User{}).Where("name = ?", name).Update(user)
+	}
+
 }
 func UpdateUserPass(name string, pass string) {
 	user := &User{

@@ -25,8 +25,8 @@ func InitApiRouter(engine *gin.Engine) {
 	engine.POST("/check", controller.LoginCheckPass)
 
 	engine.GET("/userinfo", middleware.JwtApiMiddleware, controller.GetKefuInfoAll)
-	engine.POST("/register", middleware.Ipblack, controller.PostKefuRegister)
-	engine.POST("/install", controller.PostInstall)
+	// engine.POST("/register", middleware.Ipblack, controller.PostKefuRegister)
+	// engine.POST("/install", controller.PostInstall)
 	//前后聊天
 	engine.GET("/ws_kefu", middleware.JwtApiMiddleware, ws.NewKefuServer)
 	engine.GET("/ws_visitor", middleware.Ipblack, ws.NewVisitorServer)
@@ -36,7 +36,9 @@ func InitApiRouter(engine *gin.Engine) {
 	//上传文件
 	engine.POST("/uploadimg", middleware.Ipblack, controller.UploadImg)
 	//上传文件
-	engine.POST("/uploadfile", middleware.Ipblack, controller.UploadFile)
+	// engine.POST("/uploadfile", middleware.Ipblack, controller.UploadFile)
+	//获取oss链接
+	engine.GET("/getOssUrl", middleware.Ipblack, controller.GetImgUrl)
 	//获取未读消息数
 	engine.GET("/message_status", controller.GetVisitorMessage)
 	//设置消息已读

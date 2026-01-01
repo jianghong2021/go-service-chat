@@ -223,8 +223,10 @@ func PostKefuInfo(c *gin.Context) {
 		password = tools.Md5(password)
 	}
 
-	kefu_role, ok := c.Get("kefu_role")
-	if !ok || kefu_role != "1" {
+	kf_id := c.GetString("kefu_id")
+
+	kefu_role := c.GetString("kefu_role")
+	if kefu_role != "1" && kf_id != id {
 		c.JSON(200, gin.H{
 			"code":   403,
 			"msg":    "没有权限",

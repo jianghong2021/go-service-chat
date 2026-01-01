@@ -98,10 +98,8 @@ function placeFace() {
     }
     return faces;
 }
-function replaceContent (content,baseUrl) {// 转义聊天内容中的特殊字符
-    if(typeof baseUrl=="undefined"){
-        baseUrl="";
-    }
+function replaceContent (content) {// 转义聊天内容中的特殊字符
+    const baseUrl="";
     var faces=placeFace();
     content = (content || '')
         .replace(/face\[(.*?)\]/g, function (face) {  // 转义表情

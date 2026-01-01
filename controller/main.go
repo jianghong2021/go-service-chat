@@ -3,8 +3,6 @@ package controller
 import (
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
 	"goflylivechat/common"
 	"goflylivechat/models"
 	"goflylivechat/tools"
@@ -13,6 +11,9 @@ import (
 	"log"
 	"os"
 	"strings"
+
+	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 )
 
 func PostInstall(c *gin.Context) {
@@ -33,7 +34,6 @@ func PostInstall(c *gin.Context) {
 	_, err := gorm.Open("mysql", dsn)
 	if err != nil {
 		log.Println(err)
-		tools.Logger().Println(err)
 		c.JSON(200, gin.H{
 			"code": 400,
 			"msg":  "数据库连接失败:" + err.Error(),

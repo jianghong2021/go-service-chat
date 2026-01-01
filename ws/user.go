@@ -2,12 +2,12 @@ package ws
 
 import (
 	"encoding/json"
-	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
 	"goflylivechat/models"
-	"goflylivechat/tools"
 	"log"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
 )
 
 func NewKefuServer(c *gin.Context) {
@@ -76,8 +76,7 @@ func OneKefuMessage(toId string, str []byte) {
 		kefu.Mux.Lock()
 		defer kefu.Mux.Unlock()
 		log.Println("OneKefuMessage unlock")
-		error := kefu.Conn.WriteMessage(websocket.TextMessage, str)
-		tools.Logger().Println("send_kefu_message", error, string(str))
+		kefu.Conn.WriteMessage(websocket.TextMessage, str)
 	}
 }
 func KefuMessage(visitorId, content string, kefuInfo models.User) {

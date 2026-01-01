@@ -108,7 +108,6 @@ func sendPushApi(token string, req string) int {
 	headers["Content-Type"] = "application/json;charset=utf-8"
 	headers["token"] = token
 	res, err := tools.PostHeader(url, []byte(req), headers)
-	tools.Logger().Infoln(url, req, err, res)
 
 	if err == nil && res != "" {
 		var pushRes GetuiResponse

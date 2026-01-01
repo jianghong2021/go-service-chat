@@ -3,8 +3,6 @@ package ws
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
 	"goflylivechat/models"
 	"goflylivechat/tools"
 	"log"
@@ -12,6 +10,9 @@ import (
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
 )
 
 type User struct {
@@ -114,7 +115,7 @@ func WsServerBackend() {
 			continue
 		}
 		msgType := typeMsg.Type.(string)
-		log.Println("客户端:", string(message.content))
+		// log.Println("客户端:", string(message.content))
 
 		switch msgType {
 		//心跳

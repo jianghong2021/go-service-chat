@@ -422,7 +422,7 @@ a{color: #07a9fe;text-decoration: none;}
         align-items: center;
     }
     .chatEntBox {
-        width: calc(100% - 265px);
+        width: 100%;
         float: left;
         border-right: 1px solid #e6e6e6;
     }

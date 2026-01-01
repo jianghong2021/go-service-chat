@@ -35,6 +35,7 @@ func run() {
 	log.Println("Starting server...\nURL: http://" + baseServer)
 
 	// Gin engine setup
+	gin.SetMode(gin.ReleaseMode)
 	engine := gin.Default()
 	engine.LoadHTMLGlob("static/templates/*")
 	engine.Static("/static", "./static")

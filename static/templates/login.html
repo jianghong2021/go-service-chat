@@ -3,7 +3,8 @@
     <meta charset="utf-8">
     <meta name="renderer" content="webkit">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <title>GoflyLiveChat - Open Source Live Chat</title>
+    <title>C8客服系统</title>
+    <link rel="shortcut icon" href="/static/images/1.png" type="image/x-icon">
     <link rel="stylesheet" href="/static/cdn/element-ui/2.15.1/theme-chalk/index.min.css">
     <script src="/static/cdn/vue/2.6.11/vue.min.js"></script>
     <script src="/static/cdn/element-ui/2.15.1/index.js"></script>
@@ -52,21 +53,19 @@
 <div id="app" class="signin">
     <template>
         <div class="loginHtml">
-            <h1 class="loginTitle">GOFLY LIVE CHAT</h1>
+            <h1 class="loginTitle">C8客服系统</h1>
             <el-form :model="form" :rules="rules" ref="loginForm" v-show="!showRegHtml">
-                <el-form-item prop="account">
-                    <el-input v-model="form.account" placeholder="Enter your username"></el-input>
+                <el-form-item prop="账号">
+                    <el-input v-model="form.account" placeholder="请输入账号"></el-input>
                 </el-form-item>
-                <el-form-item prop="password">
-                    <el-input show-password v-on:keyup.enter.native="handleLogin('loginForm')" v-model="form.password" placeholder="Enter your password"></el-input>
+                <el-form-item prop="密码">
+                    <el-input show-password v-on:keyup.enter.native="handleLogin('loginForm')" v-model="form.password" placeholder="请输入密码"></el-input>
                 </el-form-item>
                 <el-form-item>
-                    <el-button style="width: 100%" type="primary" @click="handleLogin('loginForm')">Log In</el-button>
+                    <el-button style="width: 100%" type="primary" @click="handleLogin('loginForm')">登录</el-button>
                 </el-form-item>
             </el-form>
         </div>
-
-        <p class="copyright">GOFLY LIVE CHAT - Open Source Live Chat Platform</p>
     </template>
 </div>
 </body>

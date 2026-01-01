@@ -3,17 +3,19 @@ package controller
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
 	"goflylivechat/common"
 	"goflylivechat/models"
 	"goflylivechat/tools"
 	"goflylivechat/ws"
+	"log"
 	"os"
 	"path"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
 )
 
 func SendMessageV2(c *gin.Context) {
@@ -63,20 +65,6 @@ func SendMessageV2(c *gin.Context) {
 			ws.VisitorMessage(vistorInfo.VisitorId, content, kefuInfo)
 		}
 		ws.KefuMessage(vistorInfo.VisitorId, content, kefuInfo)
-		//msg = TypeMessage{
-		//	Type: "message",
-		//	Data: ws.ClientMessage{
-		//		Name:    kefuInfo.Nickname,
-		//		Avator:  kefuInfo.Avator,
-		//		Id:      vistorInfo.VisitorId,
-		//		Time:    time.Now().Format("2006-01-02 15:04:05"),
-		//		ToId:    vistorInfo.VisitorId,
-		//		Content: content,
-		//		IsKefu:  "yes",
-		//	},
-		//}
-		//str2, _ := json.Marshal(msg)
-		//ws.OneKefuMessage(kefuInfo.Name, str2)
 		c.JSON(200, gin.H{
 			"code": 200,
 			"msg":  "ok",
@@ -87,14 +75,7 @@ func SendMessageV2(c *gin.Context) {
 		if ok && guest != nil {
 			guest.UpdateTime = time.Now()
 		}
-		//kefuConns, ok := ws.KefuList[kefuInfo.Name]
-		//if kefuConns == nil || !ok {
-		//	c.JSON(200, gin.H{
-		//		"code": 200,
-		//		"msg":  "ok",
-		//	})
-		//	return
-		//}
+
 		msg := ws.TypeMessage{
 			Type: "message",
 			Data: ws.ClientMessage{
@@ -212,16 +193,34 @@ func SendCloseMessageV2(c *gin.Context) {
 			Data: visitorId,
 		}
 		str, _ := json.Marshal(msg)
-		err := oldUser.Conn.WriteMessage(websocket.TextMessage, str)
+		oldUser.Conn.WriteMessage(websocket.TextMessage, str)
 		oldUser.Conn.Close()
 		delete(ws.ClientList, visitorId)
-		tools.Logger().Println("close_message", oldUser, err)
 	}
 	c.JSON(200, gin.H{
 		"code": 200,
 		"msg":  "ok",
 	})
 }
+
+func GetImgUrl(c *gin.Context) {
+	file := c.Query("file")
+	src, err := tools.GeOsstUrl(file)
+	if err != nil {
+		c.JSON(200, gin.H{
+			"code": 403,
+			"msg":  "err",
+		})
+
+	} else {
+		c.JSON(200, gin.H{
+			"code":   200,
+			"msg":    "ok",
+			"result": src,
+		})
+	}
+}
+
 func UploadImg(c *gin.Context) {
 	f, err := c.FormFile("imgfile")
 	if err != nil {
@@ -251,7 +250,16 @@ func UploadImg(c *gin.Context) {
 			os.Mkdir(fildDir, os.ModePerm)
 		}
 		filepath := fmt.Sprintf("%s%s%s", fildDir, fileName, fileExt)
-		c.SaveUploadedFile(f, filepath)
+		err := tools.OssUpload(f, filepath)
+		if err != nil {
+			log.Println(filepath, err.Error())
+			c.JSON(200, gin.H{
+				"code":   500,
+				"msg":    "上传失败!",
+				"result": nil,
+			})
+			return
+		}
 		c.JSON(200, gin.H{
 			"code": 200,
 			"msg":  "上传成功!",

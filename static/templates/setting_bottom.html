@@ -1,4 +1,5 @@
 {{define "setting_bottom"}}
+<script src="/static/js/msg.js"></script>
 <script>
     if (typeof ACTION=="undefined"){
         ACTION="{{.action}}";
@@ -71,9 +72,10 @@
 
             setUser(){
                 let _this=this;
+                console.log(_this.kefuInfo)
                 this.sendAjax("/kefuinfo","POST",{
                     id:_this.kefuInfo.uid,
-                    name:_this.kefuInfo.username,
+                    username:_this.kefuInfo.username,
                     nickname:_this.kefuInfo.nickname,
                     avator:_this.kefuInfo.avator,
                     password:_this.kefuInfo.password,
@@ -93,7 +95,10 @@
                     });
                     return;
                 }
-                this.kefuInfo.avator = '/'+res.result.path;
+                getOssUrl(res.result.path).then(src=>{
+                    this.kefuInfo.avator = src;
+                })
+                
             },
             beforeAvatarUpload(file) {
                 var isLt2M = file.size / 1024 / 1024 < 1;
