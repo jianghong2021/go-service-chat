@@ -2,6 +2,7 @@ package tools
 
 import (
 	"encoding/json"
+	"log"
 	"net/url"
 	"time"
 )
@@ -39,5 +40,8 @@ func SiteverifyWithLogin(token string) (bool, error) {
 		return false, err
 	}
 	ok := result.Success && result.Score >= 0.5 && result.Action == "login"
+	if !ok {
+		log.Println("google验证失败:", result)
+	}
 	return ok, nil
 }
