@@ -3,33 +3,32 @@ package controller
 import (
 	"goflylivechat/models"
 	"goflylivechat/tools"
+	"log"
 	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
-// @Summary User Authentication API
-// @Description Validates user credentials and returns access token
-// @Tags Authentication
-// @Produce json
-// @Accept multipart/form-data
-// @Param username formData string true "Registered username"
-// @Param password formData string true "Account password"
-// @Param type formData string true "Auth type (e.g., 'admin' or 'user')"
-// @Success 200 {object} Response
-// @Failure 401 {object} Response
-// @Failure 500 {object} Response
-// @Router /check [post]
 func LoginCheckPass(c *gin.Context) {
+	token := c.PostForm("token")
 	password := c.PostForm("password")
 	username := c.PostForm("username")
 	info := models.FindUser(username)
 
+	ok, err := tools.SiteverifyWithLogin(token)
+	if !ok {
+		log.Println("验证:", err)
+		c.JSON(200, gin.H{
+			"code":    401,
+			"message": "google验证失败",
+		})
+		return
+	}
 	// Authentication failed case
 	if info.Name == "" || info.Password != tools.Md5(password) {
 		c.JSON(200, gin.H{
 			"code":    401,
-			"message": "Incorrect username or password", // User-friendly message
+			"message": "账号密码必填",
 		})
 		return
 	}
@@ -43,11 +42,11 @@ func LoginCheckPass(c *gin.Context) {
 	}
 
 	// Token generation
-	token, err := tools.MakeToken(userinfo)
+	token, err = tools.MakeToken(userinfo)
 	if err != nil {
 		c.JSON(200, gin.H{
 			"code":    500,
-			"message": "Login temporarily unavailable",
+			"message": "登录暂时不可用",
 		})
 		return
 	}
@@ -55,7 +54,7 @@ func LoginCheckPass(c *gin.Context) {
 	// Successful response
 	c.JSON(200, gin.H{
 		"code":    200,
-		"message": "Login successful",
+		"message": "登录成功",
 		"result": gin.H{
 			"token":      token,
 			"created_at": userinfo["create_time"],

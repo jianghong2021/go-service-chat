@@ -17,32 +17,48 @@ type OssConfig struct {
 	SecretKey string
 }
 
+type GoogleCaptcha struct {
+	SecretKey string
+}
+
+type AppConfig struct {
+	Oss           OssConfig
+	GoogleCaptcha GoogleCaptcha
+}
+
 var (
-	client  *cos.Client
-	OssConf string = "config/oss.json"
+	client     *cos.Client
+	AppConFile string = "config/app.json"
+	AppConf    *AppConfig
 )
 
 func init() {
-	conf := GetOssConf()
+	LoadAppConf()
 	u, _ := url.Parse("https://c8chat-1386757550.cos.ap-hongkong.myqcloud.com")
 	su, _ := url.Parse("https://cos.ap-hongkong.myqcloud.com")
 	b := &cos.BaseURL{BucketURL: u, ServiceURL: su}
 
 	client = cos.NewClient(b, &http.Client{
 		Transport: &cos.AuthorizationTransport{
-			SecretID:  conf.SecretId,
-			SecretKey: conf.SecretKey,
+			SecretID:  AppConf.Oss.SecretId,
+			SecretKey: AppConf.Oss.SecretKey,
 		},
 	})
 }
 
-func GetOssConf() *OssConfig {
-	var oss = &OssConfig{}
-	isExist, _ := IsFileExist(OssConf)
+func LoadAppConf() {
+	if AppConf == nil {
+		AppConf = GetAppConf()
+	}
+}
+
+func GetAppConf() *AppConfig {
+	var oss = &AppConfig{}
+	isExist, _ := IsFileExist(AppConFile)
 	if !isExist {
 		return oss
 	}
-	info, err := ioutil.ReadFile(OssConf)
+	info, err := ioutil.ReadFile(AppConFile)
 	if err != nil {
 		return oss
 	}

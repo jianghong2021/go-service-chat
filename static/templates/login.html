@@ -1,4 +1,5 @@
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <meta name="renderer" content="webkit">
@@ -20,27 +21,34 @@
             justify-content: center;
             min-height: 100vh;
         }
+
         .signin {
             width: 350px;
             padding: 20px;
             background: #fff;
-            -webkit-box-shadow: 0 1px 2px 0 rgba(101,129,156,.08);
-            box-shadow: 0 1px 2px 0 rgba(101,129,156,.08);
+            -webkit-box-shadow: 0 1px 2px 0 rgba(101, 129, 156, .08);
+            box-shadow: 0 1px 2px 0 rgba(101, 129, 156, .08);
             border-radius: 4px;
         }
-        .signin h1, .signin h2, .signin .copyright {
+
+        .signin h1,
+        .signin h2,
+        .signin .copyright {
             font-weight: normal;
             color: #4d627b;
             text-align: center;
         }
+
         .signin .loginTitle {
             font-size: 22px;
             margin: 20px 0px;
         }
+
         .signin .copyright {
             font-size: 12px;
             margin-top: 20px;
         }
+
         @media (max-width: 768px) {
             .signin {
                 width: 90%;
@@ -49,36 +57,43 @@
         }
     </style>
 </head>
+
 <body>
-<div id="app" class="signin">
-    <template>
-        <div class="loginHtml">
-            <h1 class="loginTitle">C8客服系统</h1>
-            <el-form :model="form" :rules="rules" ref="loginForm" v-show="!showRegHtml">
-                <el-form-item prop="账号">
-                    <el-input v-model="form.account" placeholder="请输入账号"></el-input>
-                </el-form-item>
-                <el-form-item prop="密码">
-                    <el-input show-password v-on:keyup.enter.native="handleLogin('loginForm')" v-model="form.password" placeholder="请输入密码"></el-input>
-                </el-form-item>
-                <el-form-item>
-                    <el-button style="width: 100%" type="primary" @click="handleLogin('loginForm')">登录</el-button>
-                </el-form-item>
-            </el-form>
-        </div>
-    </template>
-</div>
+    <div id="app" class="signin">
+        <template>
+            <div class="loginHtml">
+                <h1 class="loginTitle">C8客服系统</h1>
+                <el-form :model="form" :rules="rules" ref="loginForm" v-show="!showRegHtml">
+                    <el-form-item prop="账号">
+                        <el-input v-model="form.account" placeholder="请输入账号"></el-input>
+                    </el-form-item>
+                    <el-form-item prop="密码">
+                        <el-input show-password v-on:keyup.enter.native="handleLoginWithV3" v-model="form.password"
+                            placeholder="请输入密码"></el-input>
+                    </el-form-item>
+                    <el-form-item>
+                        <el-button :disabled="loginLoading" style="width: 100%" type="primary"
+                            @click="handleLoginWithV3">登录</el-button>
+                    </el-form-item>
+                </el-form>
+            </div>
+        </template>
+    </div>
 </body>
 <script>
+    const GOOGLE_CAPTCHA_KEY = '6Leptz0sAAAAAIweL_Q--LlA0joYY6S6D78ccI45';
     new Vue({
         el: '#app',
         delimiters: ["<{", "}>"],
         data: {
+            loginLoading: false,
+            GOOGLE_CAPTCHA_KEY,
             form: {
+                token: '',
                 account: "",
                 password: "",
                 rePassword: "",
-                nickname:"",
+                nickname: "",
             },
             rules: {
                 account: [
@@ -101,26 +116,21 @@
             showRegHtml: false,
         },
         methods: {
-            validatePasswordMatch(rule, value, callback) {
-                if (value !== this.form.password) {
-                    callback(new Error('Passwords don\'t match'));
-                } else {
-                    callback();
-                }
-            },
-
-            handleLogin(formName) {
-                this.$refs[formName].validate((valid) => {
+            handleLogin(token) {
+                this.$refs.loginForm.validate((valid) => {
                     if (valid) {
-                        this.login();
+                        this.login(token);
+                    } else {
+                        this.loginLoading = false;
                     }
                 });
             },
 
-            login() {
-                let data = {
+            login(token) {
+                const data = {
                     "username": this.form.account,
                     "password": this.form.password,
+                    "token": token,
                 };
 
                 $.post("/check", data, (response) => {
@@ -137,19 +147,49 @@
                             type: 'error'
                         });
                     }
+                    this.loginLoading = false;
                 }).fail(() => {
                     this.$message({
                         message: 'Connection error',
                         type: 'error'
                     });
+                    this.loginLoading = false;
+                })
+            },
+            initCaptcha() {
+                this.loginLoading = true;
+                const script = document.createElement('script');
+                script.src = 'https://www.google.com/recaptcha/api.js?render=' + GOOGLE_CAPTCHA_KEY;
+                script.onload = ()=>{
+                    this.loginLoading = false;
+                }
+                document.head.appendChild(script);
+            },
+            handleLoginWithV3(e) {
+                e.preventDefault();
+                this.loginLoading = true
+                grecaptcha.ready(() => {
+                    grecaptcha.execute(GOOGLE_CAPTCHA_KEY, { action: 'login' })
+                        .then(token => {
+                            this.handleLogin(token);
+                        }).catch(err => {
+                            console.error(err)
+                            this.$message({
+                                message: err.message || 'google验证失败',
+                                type: 'error'
+                            });
+                            this.loginLoading = false;
+                        })
                 });
             },
         },
-        created: function() {
+        created: function () {
+            this.initCaptcha();
             if (top.location != location) {
                 top.location.href = location.href;
             }
         }
     });
 </script>
+
 </html>

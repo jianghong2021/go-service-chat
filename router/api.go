@@ -21,7 +21,7 @@ func InitApiRouter(engine *gin.Engine) {
 		//分页查询消息
 		v2.GET("/messagesPages", controller.GetMessagespages)
 	}
-	engine.GET("/captcha", controller.GetCaptcha)
+	// engine.GET("/captcha", controller.GetCaptcha)
 	engine.POST("/check", controller.LoginCheckPass)
 
 	engine.GET("/userinfo", middleware.JwtApiMiddleware, controller.GetKefuInfoAll)

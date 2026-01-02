@@ -1,7 +1,7 @@
 .idea
 imaptool.exe
-config/mysql.json
-config/oss.json
+config/*.json
+!config/*-example.json
 logs
 static/upload
 install.lock

@@ -1,0 +1,9 @@
+{
+    "Oss": {
+        "SecretId": "",
+        "SecretKey": ""
+    },
+    "GoogleCaptcha":{
+        "SecretKey": ""
+    }
+}
