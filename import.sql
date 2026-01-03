@@ -15,7 +15,7 @@ CREATE TABLE `user` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 TRUNCATE TABLE `user`;
 
-INSERT INTO `user` VALUES (1, 'admin', 'e10adc3949ba59abbe56e057f20f883e', '系统管理员', '2020-06-27 19:32:41', '2025-12-31 16:28:57', NULL, '/static/images/4.jpg', 1);
+INSERT INTO `user` VALUES (1, 'admin', 'e10adc3949ba59abbe56e057f20f883e', '系统管理员', '2020-06-27 19:32:41', '2025-12-31 16:28:57', NULL, '/static/images/4.jpg', 1,'');
 
 DROP TABLE IF EXISTS `visitor`;
 CREATE TABLE `visitor` (
