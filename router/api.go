@@ -21,6 +21,13 @@ func InitApiRouter(engine *gin.Engine) {
 		//分页查询消息
 		v2.GET("/messagesPages", controller.GetMessagespages)
 	}
+
+	// otp
+	opt := engine.Group("/otp")
+	{
+		opt.POST("/enable2FA", controller.Enable2FA)
+	}
+
 	// engine.GET("/captcha", controller.GetCaptcha)
 	engine.POST("/check", controller.LoginCheckPass)
 

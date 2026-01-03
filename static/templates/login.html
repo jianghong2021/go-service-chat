@@ -71,6 +71,10 @@
                         <el-input show-password v-on:keyup.enter.native="handleLoginWithV3" v-model="form.password"
                             placeholder="请输入密码"></el-input>
                     </el-form-item>
+                    <el-form-item prop="2FA码">
+                        <el-input v-on:keyup.enter.native="handleLoginWithV3" v-model="form.otpCode"
+                            placeholder="请输入2FA码,未开启可空"></el-input>
+                    </el-form-item>
                     <el-form-item>
                         <el-button :disabled="loginLoading" style="width: 100%" type="primary"
                             @click="handleLoginWithV3">登录</el-button>
@@ -94,6 +98,7 @@
                 password: "",
                 rePassword: "",
                 nickname: "",
+                otpCode: "",
             },
             rules: {
                 account: [
@@ -131,6 +136,7 @@
                     "username": this.form.account,
                     "password": this.form.password,
                     "token": token,
+                    "otpCode": this.form.otpCode
                 };
 
                 $.post("/check", data, (response) => {

@@ -41,7 +41,7 @@ func SiteverifyWithLogin(token string) (bool, error) {
 	}
 	ok := result.Success && result.Score >= 0.5 && result.Action == "login"
 	if !ok {
-		log.Println("google验证失败:", result)
+		log.Println("google验证失败:", result.ErrorCodes)
 	}
 	return ok, nil
 }

@@ -1,85 +1,87 @@
 {{define "setting_bottom"}}
 <script src="/static/js/msg.js"></script>
 <script>
-    if (typeof ACTION=="undefined"){
-        ACTION="{{.action}}";
+    if (typeof ACTION == "undefined") {
+        ACTION = "{{.action}}";
     }
 </script>
 <script>
-    var app=new Vue({
+    var app = new Vue({
         el: '#app',
-        delimiters:["<{","}>"],
+        delimiters: ["<{", "}>"],
         data: {
-            host:getBaseUrl(),
-            deployCode:"",
-            kefuInfo:{},
+            host: getBaseUrl(),
+            deployCode: "",
+            kefuInfo: {},
             account: {
                 username: "",
                 password: "",
             },
-
-            kefuForm:{
-                id:"",
-                name:"",
-                password:"",
-                avator:"",
-                nickname:"",
-                role_name:"",
-                role_id:"",
+            enable2FA: false,
+            enable2FALoading: false,
+            otpsQrcode: '',
+            kefuForm: {
+                id: "",
+                name: "",
+                password: "",
+                avator: "",
+                nickname: "",
+                role_name: "",
+                role_id: "",
             },
 
-            avatarUrl:"",
+            avatarUrl: "",
             chatEndpoint: "",
-            
+
         },
 
         methods: {
             //跳转
-            openUrl(url){
+            openUrl(url) {
                 //window.location.href=url;
-                this.iframeUrl=url;
+                this.iframeUrl = url;
             },
 
             //初始化数据
-            initInfo(){
-                
+            initInfo() {
+
             },
-            sendAjax(url,method,params,callback){
-                let _this=this;
+            sendAjax(url, method, params, callback) {
+                let _this = this;
                 $.ajax({
                     type: method,
                     url: url,
-                    data:params,
+                    data: params,
                     headers: {
                         "token": localStorage.getItem("token")
                     },
-                    success: function(data) {
-                        if(data.code!=200){
+                    success: function (data) {
+                        if (data.code != 200) {
                             _this.$message({
                                 message: data.msg,
                                 type: 'error'
                             });
-                        }else if(data.result!=null){
+                        } else if (data.result != null) {
                             callback(data.result);
-                        }else{
+                        } else {
                             callback(data);
                         }
-                        _this.fullscreenLoading=false
+                        _this.fullscreenLoading = false
 
                     }
                 });
             },
 
-            setUser(){
-                let _this=this;
+            setUser() {
+                let _this = this;
                 console.log(_this.kefuInfo)
-                this.sendAjax("/kefuinfo","POST",{
-                    id:_this.kefuInfo.uid,
-                    username:_this.kefuInfo.username,
-                    nickname:_this.kefuInfo.nickname,
-                    avator:_this.kefuInfo.avator,
-                    password:_this.kefuInfo.password,
-                },function(result){
+                this.sendAjax("/kefuinfo", "POST", {
+                    id: _this.kefuInfo.uid,
+                    username: _this.kefuInfo.username,
+                    nickname: _this.kefuInfo.nickname,
+                    avator: _this.kefuInfo.avator,
+                    password: _this.kefuInfo.password,
+                }, function (result) {
                     _this.$message({
                         message: "success",
                         type: 'success'
@@ -87,18 +89,18 @@
                 });
             },
             handleAvatarSuccess(res, file) {
-                console.log(res,file);
-                if(res.code!=200){
+                console.log(res, file);
+                if (res.code != 200) {
                     _this.$message({
                         message: res.msg,
                         type: 'error'
                     });
                     return;
                 }
-                getOssUrl(res.result.path).then(src=>{
+                getOssUrl(res.result.path).then(src => {
                     this.kefuInfo.avator = src;
                 })
-                
+
             },
             beforeAvatarUpload(file) {
                 var isLt2M = file.size / 1024 / 1024 < 1;
@@ -110,13 +112,13 @@
             GetRequest() {
                 var str = location.href
                 var num = str.indexOf("#");
-                if(num <0){
+                if (num < 0) {
                     return "";
                 }
                 str = str.substr(num + 1);
                 return str;
             },
-            copyText(text){
+            copyText(text) {
                 copyText(text);
                 this.$message({
                     message: "success",
@@ -124,21 +126,22 @@
                 });
             },
             //获取客服信息
-            getKefuInfo(){
-                let _this=this;
+            getKefuInfo() {
+                let _this = this;
                 $.ajax({
-                    type:"get",
-                    url:"/kefuinfo",
-                    headers:{
-                        "token":localStorage.getItem("token")
+                    type: "get",
+                    url: "/kefuinfo",
+                    headers: {
+                        "token": localStorage.getItem("token")
                     },
-                    success: function(data) {
-                        if(data.result.username==""){
-                            window.location.href="/login";
+                    success: function (data) {
+                        if (data.result.username == "") {
+                            window.location.href = "/login";
                         }
-                        if(data.code==200 && data.result!=null){
-                            _this.kefuInfo=data.result;
-                            _this.chatEndpoint=window.location.origin + '/livechat?user_id='+_this.kefuInfo.username;
+                        if (data.code == 200 && data.result != null) {
+                            _this.kefuInfo = data.result;
+                            _this.enable2FA = data.result.enable2FA;
+                            _this.chatEndpoint = window.location.origin + '/livechat?user_id=' + _this.kefuInfo.username;
                         }
 
                         _this.deployCode = `
@@ -170,13 +173,53 @@
             openChatWindow(url) {
                 // 在新窗口打开聊天页面
                 window.open(url, '_blank');
+            },
+            enable2FAChange() {
+                const _this = this;
+                _this.enable2FALoading = true;
+                $.post({
+                    url: "/otp/enable2FA",
+                    headers: {
+                        "token": localStorage.getItem("token")
+                    },
+                    data: {
+                        username: this.kefuInfo.username,
+                        enable2FA: this.enable2FA,
+                    },
+                    success(response) {
+                        _this.enable2FALoading = false;
+                        if (response.code != 200) {
+                            _this.$message({
+                                message: response.msg,
+                                type: 'error'
+                            });
+                            _this.enable2FA = !_this.enable2FA;
+                            return
+                        }
+
+                        _this.$message({
+                            message: response.msg,
+                            type: 'success'
+                        });
+
+                        _this.otpsQrcode = response.result;
+                    },
+                    error(err) {
+                        _this.enable2FA = !_this.enable2FA;
+                        _this.enable2FALoading = false;
+                        _this.$message({
+                            message: err.message,
+                            type: 'error'
+                        });
+                    }
+                })
             }
         },
 
-        mounted:function(){
-            var urlParam=this.GetRequest();
-            if(urlParam!=""){
-                this.iframeUrl=urlParam;
+        mounted: function () {
+            var urlParam = this.GetRequest();
+            if (urlParam != "") {
+                this.iframeUrl = urlParam;
             }
 
             this.getKefuInfo();
@@ -189,5 +232,6 @@
     })
 
 </script>
+
 </html>
 {{end}}

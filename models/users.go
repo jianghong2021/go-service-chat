@@ -1,6 +1,7 @@
 package models
 
 import (
+	"goflylivechat/tools"
 	"time"
 
 	_ "github.com/jinzhu/gorm/dialects/mysql"
@@ -8,13 +9,14 @@ import (
 
 type User struct {
 	Model
-	Name     string `json:"name"`
-	Password string `json:"password"`
-	Nickname string `json:"nickname"`
-	Avator   string `json:"avator"`
-	RoleName string `json:"role_name" sql:"-"`
-	RoleId   string `json:"role_id" sql:"-"`
-	Role     string `json:"role"`
+	Name      string `json:"name"`
+	Password  string `json:"password"`
+	Nickname  string `json:"nickname"`
+	Avator    string `json:"avator"`
+	RoleName  string `json:"role_name" sql:"-"`
+	RoleId    string `json:"role_id" sql:"-"`
+	Role      string `json:"role"`
+	OtpSecret string `json:"otp_secret"`
 }
 
 func CreateUser(name string, password string, avator string, nickname string, role string) uint {
@@ -54,6 +56,24 @@ func UpdateUserPass(name string, pass string) {
 	user.UpdatedAt = time.Now()
 	DB.Model(user).Where("name = ?", name).Update("Password", pass)
 }
+
+func UpdateUserOtps(username string, secret string) error {
+	secretText, err := tools.EncodeOtpsKey(secret)
+	if err != nil {
+		return err
+	}
+	if secret == "" {
+		secretText = ""
+	}
+	user := &User{
+		OtpSecret: secretText,
+	}
+	user.UpdatedAt = time.Now()
+	DB.Model(user).Where("name = ?", username).Update("OtpSecret", secretText)
+
+	return nil
+}
+
 func UpdateUserAvator(name string, avator string) {
 	user := &User{
 		Avator: avator,

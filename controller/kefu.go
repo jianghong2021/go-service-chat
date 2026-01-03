@@ -83,6 +83,7 @@ func GetKefuInfo(c *gin.Context) {
 	info["username"] = user.Name
 	info["nickname"] = user.Nickname
 	info["role"] = user.Role
+	info["enable2FA"] = user.OtpSecret != ""
 	c.JSON(200, gin.H{
 		"code":   200,
 		"msg":    "ok",
@@ -295,5 +296,80 @@ func DeleteKefuInfo(c *gin.Context) {
 		"code":   200,
 		"msg":    "删除成功",
 		"result": "",
+	})
+}
+
+func Enable2FA(c *gin.Context) {
+	username := c.PostForm("username")
+	enable2FA := c.PostForm("enable2FA")
+
+	user := models.FindUser(username)
+
+	if user.Name == "" {
+		c.JSON(200, gin.H{
+			"code":   403,
+			"msg":    "账号不存在",
+			"result": nil,
+		})
+		return
+	}
+
+	if enable2FA != "true" {
+		err := models.UpdateUserOtps(username, "")
+		if err != nil {
+			c.JSON(200, gin.H{
+				"code":   500,
+				"msg":    "停止2FA失败",
+				"result": nil,
+				"err":    err.Error(),
+			})
+			return
+		}
+		c.JSON(200, gin.H{
+			"code":   200,
+			"msg":    "关闭2FA成功",
+			"result": "",
+		})
+		return
+	}
+
+	secret, image, err := tools.GenerateOpts(user.Name)
+
+	if err != nil {
+		c.JSON(200, gin.H{
+			"code":   500,
+			"msg":    "开启2FA失败",
+			"result": nil,
+			"err":    err.Error(),
+		})
+		return
+	}
+
+	err = models.UpdateUserOtps(username, secret)
+	if err != nil {
+		c.JSON(200, gin.H{
+			"code":   500,
+			"msg":    "开启2FA失败",
+			"result": nil,
+			"err":    err.Error(),
+		})
+		return
+	}
+
+	base64Img, err := tools.ImageToBase64(image)
+	if err != nil {
+		c.JSON(200, gin.H{
+			"code":   500,
+			"msg":    "开启2FA失败",
+			"result": nil,
+			"err":    err.Error(),
+		})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"code":   200,
+		"msg":    "开启2FA成功",
+		"result": base64Img,
 	})
 }

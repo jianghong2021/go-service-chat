@@ -3,7 +3,6 @@ package controller
 import (
 	"goflylivechat/models"
 	"goflylivechat/tools"
-	"log"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -13,24 +12,45 @@ func LoginCheckPass(c *gin.Context) {
 	token := c.PostForm("token")
 	password := c.PostForm("password")
 	username := c.PostForm("username")
-	info := models.FindUser(username)
+	otpCode := c.PostForm("otpCode")
 
 	ok, err := tools.SiteverifyWithLogin(token)
 	if !ok {
-		log.Println("验证:", err)
 		c.JSON(200, gin.H{
 			"code":    401,
 			"message": "google验证失败",
 		})
 		return
 	}
+	info := models.FindUser(username)
 	// Authentication failed case
 	if info.Name == "" || info.Password != tools.Md5(password) {
 		c.JSON(200, gin.H{
 			"code":    401,
-			"message": "账号密码必填",
+			"message": "账号或密码错误",
 		})
 		return
+	}
+
+	if info.OtpSecret != "" {
+		//需要验证2fa
+		secret, err := tools.DecodeOtpsKey(info.OtpSecret)
+		if err != nil {
+			c.JSON(200, gin.H{
+				"code":    401,
+				"message": "2FA解析失败",
+			})
+			return
+		}
+
+		ok := tools.ValidateOtps(otpCode, secret)
+		if !ok {
+			c.JSON(200, gin.H{
+				"code":    401,
+				"message": "2FA认证失败",
+			})
+			return
+		}
 	}
 
 	// Prepare user session data
