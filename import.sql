@@ -9,6 +9,7 @@ CREATE TABLE `user` (
  `deleted_at` timestamp NULL DEFAULT NULL,
  `avator` varchar(100) NOT NULL DEFAULT '',
  `role` tinyint(2) NOT NULL DEFAULT 0,
+ `otp_secret` varchar(250) NOT NULL DEFAULT '',
  PRIMARY KEY (`id`),
  UNIQUE KEY `idx_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
