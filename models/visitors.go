@@ -73,7 +73,7 @@ func UpdateVisitorStatus(visitorId string, status uint) {
 	visitor := Visitor{}
 	DB.Model(&visitor).Where("visitor_id = ?", visitorId).Update("status", status)
 }
-func UpdateVisitor(name, avator, visitorId string, status uint, clientIp string, sourceIp string, refer, extra string) {
+func UpdateVisitor(name, avator, visitorId string, status uint, clientIp string, toId string, sourceIp string, refer, extra string) {
 	visitor := &Visitor{
 		Status:   status,
 		ClientIp: clientIp,
@@ -82,6 +82,7 @@ func UpdateVisitor(name, avator, visitorId string, status uint, clientIp string,
 		Extra:    extra,
 		Name:     name,
 		Avator:   avator,
+		ToId:     toId,
 	}
 	visitor.UpdatedAt = time.Now()
 	DB.Model(visitor).Where("visitor_id = ?", visitorId).Update(visitor)

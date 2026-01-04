@@ -10,6 +10,7 @@
         el: '#app',
         delimiters: ["<{", "}>"],
         data: {
+            role: 0,
             host: getBaseUrl(),
             deployCode: "",
             kefuInfo: {},
@@ -141,7 +142,7 @@
                         if (data.code == 200 && data.result != null) {
                             _this.kefuInfo = data.result;
                             _this.enable2FA = data.result.enable2FA;
-                            _this.chatEndpoint = window.location.origin + '/livechat?user_id=' + _this.kefuInfo.username;
+                            _this.chatEndpoint = window.location.origin + '/livechat?kefu_id=' + _this.kefuInfo.username;
                         }
 
                         _this.deployCode = `
@@ -213,7 +214,51 @@
                         });
                     }
                 })
-            }
+            },
+            clearMessageHandler() {
+                const _this = this;
+                _this.enable2FALoading = true;
+                $.post({
+                    url: "/kefu/clearMessages",
+                    headers: {
+                        "token": localStorage.getItem("token")
+                    },
+                    success(response) {
+                        if (response.code != 200) {
+                            _this.$message({
+                                message: response.msg,
+                                type: 'error'
+                            });
+                            return
+                        }
+                        _this.$message({
+                            message: response.msg,
+                            type: 'success'
+                        });
+                    },
+                    error(err) {
+                        _this.$message({
+                            message: err.message,
+                            type: 'error'
+                        });
+                    }
+                })
+            },
+            clearMessage() {
+                this.$confirm('即将删除所有消息, 是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    this.clearMessageHandler();
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消删除'
+                    });
+                });
+
+            },
         },
 
         mounted: function () {
@@ -227,7 +272,7 @@
 
         },
         created: function () {
-
+            this.role = sessionStorage.getItem('usre-role') || 0;
         }
     })
 

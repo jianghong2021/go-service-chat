@@ -71,7 +71,7 @@
         font-family: monospace;
     }
 
-    .otps-tips{
+    .otps-tips {
         color: rgb(233, 132, 17);
     }
 </style>
@@ -114,6 +114,16 @@
                     </el-switch>
                 </el-form-item>
             </el-form>
+
+            <template v-if="role==1">
+                <h3 class="form-title">数据管理</h3>
+                <el-form label-width="180px" label-position="left">
+                    <el-form-item label="聊天数据">
+                        <el-button type="danger" @click="clearMessage()">清除所有聊天数据</el-button>
+                    </el-form-item>
+                </el-form>
+            </template>
+
         </div>
     </template>
 </div>

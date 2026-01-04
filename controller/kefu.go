@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"goflylivechat/models"
 	"goflylivechat/tools"
 	"goflylivechat/ws"
@@ -371,5 +372,26 @@ func Enable2FA(c *gin.Context) {
 		"code":   200,
 		"msg":    "开启2FA成功",
 		"result": base64Img,
+	})
+}
+
+func ClearMessages(c *gin.Context) {
+
+	kefu_role := c.GetString("kefu_role")
+	if kefu_role != "1" {
+		c.JSON(200, gin.H{
+			"code":   403,
+			"msg":    "没有权限",
+			"result": nil,
+		})
+		return
+	}
+
+	coun := models.DeleteMessage("")
+
+	c.JSON(200, gin.H{
+		"code":   200,
+		"msg":    fmt.Sprintf("已清除 %d 条信息!", coun),
+		"result": coun,
 	})
 }

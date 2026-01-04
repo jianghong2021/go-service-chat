@@ -122,8 +122,7 @@ func FindMessageByPage(page uint, pagesize uint, query interface{}, args ...inte
 }
 
 // 硬删除消息
-func DeleteMessage(query any, args ...any) uint {
-	var count uint
-	DB.Table("message").Where(query, args...).Delete(&count)
-	return count
+func DeleteMessage(query any, args ...any) int64 {
+	res := DB.Table("message").Where(query, args...).Delete(nil)
+	return res.RowsAffected
 }

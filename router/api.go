@@ -22,6 +22,9 @@ func InitApiRouter(engine *gin.Engine) {
 		v2.GET("/messagesPages", controller.GetMessagespages)
 	}
 
+	//用户|游客登录
+	engine.POST("/visitor_login", middleware.Ipblack, controller.VisitorLogin)
+
 	// otp
 	opt := engine.Group("/otp")
 	{
@@ -78,7 +81,9 @@ func InitApiRouter(engine *gin.Engine) {
 	engine.GET("/visitors_online", controller.GetVisitorOnlines)
 	engine.GET("/visitors_kefu_online", middleware.JwtApiMiddleware, controller.GetKefusVisitorOnlines)
 	engine.GET("/clear_online_tcp", controller.DeleteOnlineTcp)
-	engine.POST("/visitor_login", middleware.Ipblack, controller.PostVisitorLogin)
+
+	// engine.POST("/visitor_login", middleware.Ipblack, controller.PostVisitorLogin)
+
 	//engine.POST("/visitor", controller.PostVisitor)
 	engine.GET("/visitor", middleware.JwtApiMiddleware, controller.GetVisitor)
 	engine.GET("/visitors", middleware.JwtApiMiddleware, controller.GetVisitors)
@@ -109,6 +114,7 @@ func InitApiRouter(engine *gin.Engine) {
 	{
 		kefuGroup.GET("/chartStatistics", controller.GetChartStatistic)
 		kefuGroup.POST("/message", controller.SendKefuMessage)
+		kefuGroup.POST("/clearMessages", controller.ClearMessages)
 	}
 	//微信接口
 	engine.GET("/micro_program", middleware.JwtApiMiddleware, controller.GetCheckWeixinSign)

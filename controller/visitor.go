@@ -78,7 +78,7 @@ func PostVisitorLogin(c *gin.Context) {
 	if visitor.Name != "" {
 		avator = visitor.Avator
 		//更新状态上线
-		models.UpdateVisitor(name, visitor.Avator, id, 1, c.ClientIP(), c.ClientIP(), refer, extra)
+		models.UpdateVisitor(name, visitor.Avator, id, 1, c.ClientIP(), toId, c.ClientIP(), refer, extra)
 	} else {
 		models.CreateVisitor(name, avator, c.ClientIP(), toId, id, refer, city, client_ip, extra)
 	}
