@@ -111,6 +111,38 @@ func GetVisitor(c *gin.Context) {
 	})
 }
 
+func GetVisitorInfo(c *gin.Context) {
+	visitor_id := c.GetString("visitor_id")
+	toId := c.Query("to_id")
+	if visitor_id == "" {
+		c.JSON(200, gin.H{
+			"code":   401,
+			"msg":    "登录昨天无效",
+			"result": nil,
+		})
+		return
+	}
+	vistor := models.FindVisitorByVistorId(visitor_id)
+	if vistor.Name == "" {
+		c.JSON(200, gin.H{
+			"code":   404,
+			"msg":    "账号不存在",
+			"result": nil,
+		})
+		return
+	}
+	//清空之前的记录
+	if vistor.ToId != toId {
+		models.DeleteMessage("visitor_id = ?", vistor.VisitorId)
+	}
+	models.UpdateVisitor(vistor.Name, vistor.Avator, vistor.VisitorId, 1, c.ClientIP(), toId, c.ClientIP(), vistor.Refer, vistor.Extra)
+	c.JSON(200, gin.H{
+		"code":   200,
+		"msg":    "ok",
+		"result": vistor,
+	})
+}
+
 // @Summary 获取访客列表接口
 // @Produce  json
 // @Accept multipart/form-data

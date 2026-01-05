@@ -9,8 +9,8 @@ import (
 )
 
 func InitApiRouter(engine *gin.Engine) {
-	//路由分组
-	v2 := engine.Group("/2")
+	//客户聊天端
+	v2 := engine.Group("/v2", middleware.JwtApiVisitorMiddleware, middleware.Ipblack)
 	{
 		//获取消息
 		v2.GET("/messages", controller.GetMessagesV2)
@@ -20,6 +20,10 @@ func InitApiRouter(engine *gin.Engine) {
 		v2.GET("/message_close", controller.SendCloseMessageV2)
 		//分页查询消息
 		v2.GET("/messagesPages", controller.GetMessagespages)
+		//用户信息
+		v2.GET("/info", controller.GetVisitorInfo)
+		//上传文件
+		v2.POST("/uploadimg", controller.UploadImg)
 	}
 
 	//用户|游客登录
@@ -43,8 +47,7 @@ func InitApiRouter(engine *gin.Engine) {
 
 	engine.GET("/messages", controller.GetVisitorMessage)
 	engine.GET("/message_notice", controller.SendVisitorNotice)
-	//上传文件
-	engine.POST("/uploadimg", middleware.Ipblack, controller.UploadImg)
+
 	//上传文件
 	// engine.POST("/uploadfile", middleware.Ipblack, controller.UploadFile)
 	//获取oss链接
@@ -115,6 +118,11 @@ func InitApiRouter(engine *gin.Engine) {
 		kefuGroup.GET("/chartStatistics", controller.GetChartStatistic)
 		kefuGroup.POST("/message", controller.SendKefuMessage)
 		kefuGroup.POST("/clearMessages", controller.ClearMessages)
+		//上传文件
+		kefuGroup.POST("/uploadimg", controller.UploadImg)
+
+		//分页查询消息
+		kefuGroup.GET("/messagesPages", controller.GetMessagespages)
 	}
 	//微信接口
 	engine.GET("/micro_program", middleware.JwtApiMiddleware, controller.GetCheckWeixinSign)

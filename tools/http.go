@@ -1,6 +1,8 @@
 package tools
 
 import (
+	"encoding/json"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -21,7 +23,7 @@ func Get(url string) string {
 	return string(robots)
 }
 
-//Post("http://xxxx","application/json;charset=utf-8",[]byte("{'aaa':'bbb'}"))
+// Post("http://xxxx","application/json;charset=utf-8",[]byte("{'aaa':'bbb'}"))
 func Post(url string, contentType string, body []byte) (string, error) {
 	res, err := http.Post(url, contentType, strings.NewReader(string(body)))
 	if err != nil {
@@ -60,7 +62,8 @@ func IsMobile(userAgent string) bool {
 	}
 	return false
 }
-//发送http post请求数据为form
+
+// 发送http post请求数据为form
 func PostForm(url string, data url.Values) (string, error) {
 	resp, err := http.PostForm(url, data)
 	if err != nil {
@@ -72,4 +75,27 @@ func PostForm(url string, data url.Values) (string, error) {
 		return "", err
 	}
 	return string(content), nil
+}
+
+func PostFormWithHeaders(url string, data map[string]string, headers map[string]string) (string, error) {
+	client := &http.Client{}
+	json_data, err := json.Marshal(data)
+	if err != nil {
+		return "", nil
+	}
+	req, err := http.NewRequest("POST", url, strings.NewReader(string(json_data)))
+	if err != nil {
+		return "", err
+	}
+	for key, header := range headers {
+		req.Header.Set(key, header)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	return string(body), nil
 }

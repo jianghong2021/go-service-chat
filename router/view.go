@@ -7,7 +7,7 @@ import (
 )
 
 func InitViewRouter(engine *gin.Engine) {
-	//engine.GET("/", tmpl.PageIndex)
+	engine.GET("/", PageIndex)
 	engine.GET("/login", PageLogin)
 	engine.GET("/pannel", PagePannel)
 	engine.GET("/livechat", PageChat)
@@ -15,6 +15,13 @@ func InitViewRouter(engine *gin.Engine) {
 	engine.GET("/chat_main", PageChatMain)
 	engine.GET("/setting", PageSetting)
 	engine.GET("/users", PageUsers)
+}
+
+func PageIndex(c *gin.Context) {
+	c.HTML(http.StatusOK, "error.html", gin.H{
+		"code": 404,
+		"msg":  "不存在此页面",
+	})
 }
 
 // Login page
@@ -41,6 +48,16 @@ func PageChat(c *gin.Context) {
 	}
 	if referralSource == "" {
 		referralSource = "Direct access" // More natural English
+	}
+
+	token := c.Query("Authorization")
+	kefu_id := c.Query("kefu_id")
+	if token == "" || kefu_id == "" {
+		c.HTML(http.StatusOK, "error.html", gin.H{
+			"code": 403,
+			"msg":  "禁止访问此页面",
+		})
+		return
 	}
 
 	c.HTML(http.StatusOK, "chat_page.html", gin.H{

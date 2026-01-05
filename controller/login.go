@@ -6,7 +6,6 @@ import (
 	"goflylivechat/models"
 	"goflylivechat/tools"
 	"goflylivechat/ws"
-	"net/url"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -98,25 +97,19 @@ func VisitorLogin(c *gin.Context) {
 		avator = "/static/images/2.png"
 	}
 
-	//google验证
-	ok, err := tools.SiteverifyWithLogin(token)
-	if !ok {
+	//c8 auth
+	c8Info, err := tools.C8AuthAndGetInfo(token)
+	if err != nil {
 		c.JSON(200, gin.H{
-			"code":    401,
-			"message": "google验证失败",
+			"code": 400,
+			"msg":  err.Error(),
 		})
 		return
 	}
 
 	toId := c.PostForm("to_id")
-	visitor_name := c.PostForm("visitor_name")
-	id := tools.Uuid()
 	refer := c.PostForm("refer")
-	name := "Guest"
-	vn, err := url.QueryUnescape(visitor_name)
-	if vn != "" && err == nil {
-		name = vn
-	}
+	name := c8Info.Username
 	city := ""
 	countryname, cityname := tools.GetCity("./config/GeoLite2-City.mmdb", c.ClientIP())
 	if countryname != "" || cityname != "" {
@@ -139,11 +132,11 @@ func VisitorLogin(c *gin.Context) {
 			}
 		}
 	}
-	//log.Println(name,avator,c.ClientIP(),toId,id,refer,city,client_ip)
-	if name == "" || avator == "" || toId == "" || id == "" || refer == "" || client_ip == "" {
+
+	if name == "" || avator == "" || toId == "" || refer == "" || client_ip == "" {
 		c.JSON(200, gin.H{
 			"code": 400,
-			"msg":  "error",
+			"msg":  "登录参数缺失",
 		})
 		return
 	}
@@ -155,19 +148,21 @@ func VisitorLogin(c *gin.Context) {
 		})
 		return
 	}
-	visitor := models.FindVisitorByVistorId(id)
+	visitor_id := tools.Uuid()
+	visitor := models.FindVisitorByName(name)
 	if visitor.Name != "" {
+		visitor_id = visitor.VisitorId
 		avator = visitor.Avator
 		//更新状态上线
-		models.UpdateVisitor(name, visitor.Avator, id, 1, c.ClientIP(), toId, c.ClientIP(), refer, extra)
+		models.UpdateVisitor(name, visitor.Avator, visitor.VisitorId, 1, c.ClientIP(), toId, c.ClientIP(), refer, extra)
 	} else {
-		models.CreateVisitor(name, avator, c.ClientIP(), toId, id, refer, city, client_ip, extra)
+		models.CreateVisitor(name, avator, c.ClientIP(), toId, visitor_id, refer, city, client_ip, extra)
 	}
 	visitor.Name = name
 	visitor.Avator = avator
 	visitor.ToId = toId
 	visitor.ClientIp = c.ClientIP()
-	visitor.VisitorId = id
+	visitor.VisitorId = visitor_id
 
 	//各种通知
 	go SendNoticeEmail(visitor.Name, " incoming!")

@@ -47,14 +47,14 @@ func JwtApiMiddleware(c *gin.Context) {
 }
 
 func JwtApiVisitorMiddleware(c *gin.Context) {
-	token := c.GetHeader("token")
+	token := c.GetHeader("x_access")
 	if token == "" {
-		token = c.Query("token")
+		token = c.Query("x_access")
 	}
 	userinfo := tools.ParseToken(token)
 	if userinfo == nil || userinfo["visitor_id"] == nil || userinfo["create_time"] == nil {
 		c.JSON(200, gin.H{
-			"code": 400,
+			"code": 401,
 			"msg":  "验证失败",
 		})
 		c.Abort()

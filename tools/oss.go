@@ -25,6 +25,7 @@ type AppConfig struct {
 	Oss           OssConfig
 	GoogleCaptcha GoogleCaptcha
 	OtpsKey       string
+	C8api         string
 }
 
 var (

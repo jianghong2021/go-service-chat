@@ -40,6 +40,13 @@ func FindVisitorByVistorId(visitorId string) Visitor {
 	DB.Where("visitor_id = ?", visitorId).First(&v)
 	return v
 }
+
+func FindVisitorByName(name string) Visitor {
+	var v Visitor
+	DB.Where("name = ?", name).First(&v)
+	return v
+}
+
 func FindVisitors(page uint, pagesize uint) []Visitor {
 	offset := (page - 1) * pagesize
 	if offset < 0 {

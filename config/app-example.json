@@ -6,5 +6,6 @@
     "GoogleCaptcha":{
         "SecretKey": ""
     },
-    "OtpsKey":""
+    "OtpsKey":"",
+    "C8api": ""
 }

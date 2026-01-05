@@ -87,8 +87,8 @@
                         <el-tabs v-model="leftTabActive" @tab-click="handleTabClick">
                             <el-tab-pane label="在线客户" name="first">
                                 <el-row v-for="item in users" :key="item.uid" class="">
-                                    <div style="cursor:pointer"
-                                        class="onlineUsers hasLastMsg" v-bind:class="{'cur': item.uid==currentGuest }"
+                                    <div style="cursor:pointer" class="onlineUsers hasLastMsg"
+                                        v-bind:class="{'cur': item.uid==currentGuest }"
                                         v-on:click="talkTo(item.uid,item.username)">
                                         <el-col :span="4">
                                             <el-badge value="new" :hidden="item.hidden_new_message" class="item">
@@ -100,33 +100,11 @@
                                                 <{item.username}>
                                             </div>
                                             <div class="lastNewMsg">
-                                                
+
                                             </div>
                                         </el-col>
                                     </div>
                                 </el-row>
-                            </el-tab-pane>
-                            <el-tab-pane label="最近聊天" name="second">
-                                <el-row v-for="item in visitors" :key="item.uid" class="">
-                                    <div style="cursor:pointer" class="onlineUsers"
-                                        v-bind:class="{'cur': item.visitor_id==currentGuest }"
-                                        v-on:click="talkTo(item.visitor_id,item.name)">
-                                        <el-col :span="4">
-                                            <el-avatar :size="40" :src="item.avator"></el-avatar>
-                                        </el-col>
-                                        <el-col style="height:40px;overflow: hidden" :span="16">
-                                            <div style="height:20px;overflow: hidden">
-                                                <{item.name}>
-                                            </div>
-                                            <div class="lastNewMsg">
-                                            </div>
-                                        </el-col>
-                                    </div>
-                                </el-row>
-                                <el-pagination v-show="visitorCount>visitorPageSize" background
-                                    @current-change="visitorPage" :current-page="visitorCurrentPage"
-                                    layout="prev,pager, next" :page-size="visitorPageSize" :total="visitorCount">
-                                </el-pagination>
                             </el-tab-pane>
                         </el-tabs>
                     </div>
@@ -211,8 +189,8 @@
                             <el-tab-pane label="用户信息" name="visitorInfo">
                                 <el-menu class="visitorInfo" v-show="visitor.visitor_id">
                                     <el-tooltip content="点击加入黑名单" placement="left">
-                                        <el-menu-item v-on:click="addIpblack(visitor.source_ip)"
-                                            title="点击加入黑名单" style="padding-left:2px;color: #666;">
+                                        <el-menu-item v-on:click="addIpblack(visitor.source_ip)" title="点击加入黑名单"
+                                            style="padding-left:2px;color: #666;">
                                             <i class="el-icon-user"></i>
                                             <span slot="title">IP: <{visitor.source_ip}></span>
                                         </el-menu-item>
@@ -297,7 +275,7 @@
                 </span>
             </el-dialog>
 
-           
+
         </template>
     </div>
 </body>
@@ -470,7 +448,7 @@
                             }).catch(err => {
                                 _this.msgList.push(content);
                                 console.log(err)
-                            }).finally(()=>{
+                            }).finally(() => {
                                 _this.scrollBottom();
                             })
                         }
@@ -484,7 +462,7 @@
                             }
                         }
                     }
-                    
+
                     if (content.is_kefu) {
                         return;
                     }
@@ -698,44 +676,51 @@
                     visitor_id: this.currentGuest,
                 }
                 let _this = this;
-                $.get("/2/messagesPages", params, async function (res) {
-                    let msgList = res.result.list;
-                    if (msgList.length >= _this.messages.pagesize) {
-                        _this.showLoadMore = true;
-                    } else {
-                        _this.showLoadMore = false;
-                    }
-                    for (let i in msgList) {
-                        let item = msgList[i];
-                        //let content = {}
-                        if (item["mes_type"] == "kefu") {
-                            item.is_kefu = true;
-                            item.avator = item["kefu_avator"];
-                            item.name = item["kefu_name"];
+                $.get({
+                    url: '/kefu/messagesPages',
+                    data: params,
+                    headers: {
+                        "token": localStorage.getItem("token")
+                    },
+                    success: async (res) => {
+                        let msgList = res.result.list;
+                        if (msgList.length >= _this.messages.pagesize) {
+                            _this.showLoadMore = true;
                         } else {
-                            item.is_kefu = false;
-                            item.avator = item["visitor_avator"];
-                            item.name = item["visitor_name"];
+                            _this.showLoadMore = false;
                         }
-                        item.content = _this.replaceContent(item["content"]);
-                        item.time = item["create_time"];
+                        for (let i in msgList) {
+                            let item = msgList[i];
+                            //let content = {}
+                            if (item["mes_type"] == "kefu") {
+                                item.is_kefu = true;
+                                item.avator = item["kefu_avator"];
+                                item.name = item["kefu_name"];
+                            } else {
+                                item.is_kefu = false;
+                                item.avator = item["visitor_avator"];
+                                item.name = item["visitor_name"];
+                            }
+                            item.content = _this.replaceContent(item["content"]);
+                            item.time = item["create_time"];
 
-                        const reg = /<img\s+[^>]*src\s*=\s*["']([^"']+)["'][^>]*>/;
-                        const res = String(item.content).match(reg);
-                        if (!res || !res[0].includes('onclick')) {
+                            const reg = /<img\s+[^>]*src\s*=\s*["']([^"']+)["'][^>]*>/;
+                            const res = String(item.content).match(reg);
+                            if (!res || !res[0].includes('onclick')) {
+                                _this.msgList.unshift(item);
+                                continue;
+                            }
+                            const src = await _this.getOssUrl(res[1]);
+                            item.content = item.content.replace(res[1], src);
                             _this.msgList.unshift(item);
-                            continue;
-                        }
-                        const src = await _this.getOssUrl(res[1]);
-                        item.content = item.content.replace(res[1], src);
-                        _this.msgList.unshift(item);
 
+                        }
+                        if (_this.messages.page == 1) {
+                            _this.scrollBottom();
+                        }
+                        _this.messages.page++;
                     }
-                    if (_this.messages.page == 1) {
-                        _this.scrollBottom();
-                    }
-                    _this.messages.page++;
-                });
+                })
             },
             //获取信息列表
             getMesssagesByVisitorId(visitorId, isAll) {
@@ -841,7 +826,7 @@
                 let _this = this;
                 $.ajax({
                     type: "get",
-                    url: "/2/message_close",
+                    url: "/kefu/message_close",
                     data: { visitor_id: visitorId },
                     headers: {
                         "token": localStorage.getItem("token")
@@ -935,9 +920,12 @@
                     var file = $("#uploadImgFile")[0].files[0];
                     formData.append("imgfile", file); //传给后台的file的key值是可以自己定义的
                     filter(file) && $.ajax({
-                        url: url || '',
+                        url: '/kefu/uploadimg',
                         type: "post",
                         data: formData,
+                        headers: {
+                            "token": localStorage.getItem("token")
+                        },
                         contentType: false,
                         processData: false,
                         dataType: 'JSON',
@@ -950,48 +938,6 @@
                                 });
                             } else {
                                 _this.messageContent += 'img[/' + res.result.path + ']';
-                                _this.chatToUser();
-                            }
-                        },
-                        error: function (data) {
-                            console.log(data);
-                        }
-                    });
-                });
-            },
-            //上传文件
-            uploadFile: function (url) {
-                let _this = this;
-                $('#uploadFile').after('<input type="file"  id="uploadRealFile" name="file2" style="display:none" >');
-                $("#uploadRealFile").click();
-                $("#uploadRealFile").change(function (e) {
-                    var formData = new FormData();
-                    var file = $("#uploadRealFile")[0].files[0];
-                    formData.append("realfile", file); //传给后台的file的key值是可以自己定义的
-                    console.log(formData);
-                    $.ajax({
-                        url: url || '',
-                        type: "post",
-                        data: formData,
-                        contentType: false,
-                        processData: false,
-                        dataType: 'JSON',
-                        mimeType: "multipart/form-data",
-                        success: function (res) {
-
-                            if (res.code != 200) {
-                                _this.$message({
-                                    message: res.msg,
-                                    type: 'error'
-                                });
-                            } else {
-                                var data = JSON.stringify({
-                                    name: res.result.name,
-                                    ext: res.result.ext,
-                                    size: res.result.size,
-                                    path: '/' + res.result.path,
-                                })
-                                _this.messageContent += 'attachment[' + data + ']';
                                 _this.chatToUser();
                             }
                         },

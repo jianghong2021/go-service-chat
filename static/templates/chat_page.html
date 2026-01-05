@@ -19,99 +19,122 @@
     <link rel="stylesheet" href="/static/css/icono.min.css" />
     <link rel="stylesheet" href="/static/css/icon/iconfont.css?v=fgjlgfda" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+
+    <style>
+        .auth-loading {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
 </head>
 
 <body class="visitorBody">
     <div id="app" class="chatCenter">
         <template>
-            <!--Customer Service Code-->
-            <div class="chatEntTitle" v-show="!isIframe">
-                <el-badge type="success" is-dot class="item">
-                    <el-avatar class="chatEntTitleLogo" :size="35" :src="kefuInfo.avatar"></el-avatar>
-                </el-badge>
-                <div>
-                    <div>
-                        <{kefuInfo.nickname}>
-                    </div>
-                </div>
+            <div v-if="!isLogined" class="auth-loading">
+                <strong>
+                    <{loginErr}>
+                </strong>
             </div>
-            <div class="chatEntBox">
-                <div class="chatContext chatVisitorPage">
-                    <div class="chatBox">
-                        <div class="chatNotice" v-on:click="getHistoryMessage" v-show="showLoadMore">
-                            <a href="javascript:;" class="chatNoticeContent" style="color: #07a9fe;">加载更多</a>
+            <template v-else>
+                <!--Customer Service Code-->
+                <div class="chatEntTitle" v-show="!isIframe">
+                    <el-badge type="success" is-dot class="item">
+                        <el-avatar class="chatEntTitleLogo" :size="35" :src="kefuInfo.avatar"></el-avatar>
+                    </el-badge>
+                    <div>
+                        <div>
+                            <{kefuInfo.nickname}>
                         </div>
-                        <el-row :gutter="2" v-for="v in msgList" v-bind:class="{'chatBoxMe': v.is_kefu==false}">
-                            <div class="chatTime" v-bind:class="{'chatTimeHide': v.show_time==false}"><span>
-                                    <{v.time}>
-                                </span></div>
-                            <div v-if="v.is_kefu==true" style="display: flex;">
-                                <el-avatar style="margin-right:10px;flex-shrink: 0;" :size="36"
-                                    :src="v.avator"></el-avatar>
-                                <div class="chatMsgContent">
-
-                                    <div class="chatContent chatContent2 replyContentBtn" v-html="v.content"></div>
-                                </div>
-                            </div>
-                            <div class="kefuMe" v-if="v.is_kefu==false"
-                                style="display: flex;justify-content: flex-end;">
-                                <div class="chatContent chatContent2 replyContentBtn" v-html="v.content,KEFU_ID"></div>
-                                <el-avatar style="margin-left:10px;flex-shrink: 0;" :size="36"
-                                    :src="v.avator"></el-avatar>
-                            </div>
-                            <div class="clear"></div>
-                        </el-row>
                     </div>
                 </div>
-                <div class="chatBoxSend">
-                    <div class="visitorIconBox">
-                        <el-tooltip content="发送表情" placement="top">
-                            <div class="iconBtn iconfont icon-xiaolian"
-                                style="margin-left:10px;font-size: 24px;cursor: pointer;"
-                                @click.stop="showFaceIcon==true?showFaceIcon=false:showFaceIcon=true"></div>
-                        </el-tooltip>
+                <div class="chatEntBox">
+                    <div class="chatContext chatVisitorPage">
+                        <div class="chatBox">
+                            <div class="chatNotice" v-on:click="getHistoryMessage" v-show="showLoadMore">
+                                <a href="javascript:;" class="chatNoticeContent" style="color: #07a9fe;">加载更多</a>
+                            </div>
+                            <el-row :gutter="2" v-for="v in msgList" v-bind:class="{'chatBoxMe': v.is_kefu==false}">
+                                <div class="chatTime" v-bind:class="{'chatTimeHide': v.show_time==false}"><span>
+                                        <{v.time}>
+                                    </span></div>
+                                <div v-if="v.is_kefu==true" style="display: flex;">
+                                    <el-avatar style="margin-right:10px;flex-shrink: 0;" :size="36"
+                                        :src="v.avator"></el-avatar>
+                                    <div class="chatMsgContent">
 
-                        <el-tooltip content="上传图片" placement="top">
-                            <div class="iconBtn el-icon-picture" id="uploadImg" v-on:click="uploadImg('/uploadimg')"
-                                style="font-size: 24px;"></div>
-                        </el-tooltip>
-                        <!-- <el-tooltip content="Upload file" placement="top">
+                                        <div class="chatContent chatContent2 replyContentBtn" v-html="v.content"></div>
+                                    </div>
+                                </div>
+                                <div class="kefuMe" v-if="v.is_kefu==false"
+                                    style="display: flex;justify-content: flex-end;">
+                                    <div class="chatContent chatContent2 replyContentBtn" v-html="v.content,KEFU_ID">
+                                    </div>
+                                    <el-avatar style="margin-left:10px;flex-shrink: 0;" :size="36"
+                                        :src="v.avator"></el-avatar>
+                                </div>
+                                <div class="clear"></div>
+                            </el-row>
+                        </div>
+                    </div>
+                    <div class="chatBoxSend">
+                        <div class="visitorIconBox">
+                            <el-tooltip content="发送表情" placement="top">
+                                <div class="iconBtn iconfont icon-xiaolian"
+                                    style="margin-left:10px;font-size: 24px;cursor: pointer;"
+                                    @click.stop="showFaceIcon==true?showFaceIcon=false:showFaceIcon=true"></div>
+                            </el-tooltip>
+
+                            <el-tooltip content="上传图片" placement="top">
+                                <div class="iconBtn el-icon-picture" id="uploadImg" v-on:click="uploadImg()"
+                                    style="font-size: 24px;"></div>
+                            </el-tooltip>
+                            <!-- <el-tooltip content="Upload file" placement="top">
                         <div class="iconBtn el-icon-upload" id="uploadFile" v-on:click="uploadFile('/uploadfile')" style="font-size: 26px;"></div>
                     </el-tooltip> -->
 
-                        <div style="display: none" title="Emoji" class="icono-smile visitorIconBtns visitorFaceBtn">
+                            <div style="display: none" title="Emoji" class="icono-smile visitorIconBtns visitorFaceBtn">
+                            </div>
+
+                            <div class="clear"></div>
                         </div>
-
-                        <div class="clear"></div>
+                        <div class="faceBox visitorFaceBox" v-show="showFaceIcon">
+                            <ul class="faceBoxList">
+                                <li v-on:click="faceIconClick(i)" class="faceIcon" v-for="(v,i) in face"
+                                    :title="v.name">
+                                    <img :src=v.path>
+                                </li>
+                            </ul>
+                            <div class="clear"></div>
+                        </div>
+                        <el-input show-word-limit maxlength="100" :rows="2" type="textarea" resize="none"
+                            class="visitorEditorArea" @focus="scrollBottom;showIconBtns=false"
+                            @blur="scrollBottom;showIconBtns=false" v-model="messageContent"
+                            v-on:keyup.enter.native="chatToUser">
+                        </el-input>
+                        <el-button type="primary" size="mini" class="visitorEditorBtn"
+                            :disabled="sendDisabled||messageContent==''||loading"
+                            v-on:click="chatToUser();showIconBtns=false" v-loading="loading">发送</el-button>
                     </div>
-                    <div class="faceBox visitorFaceBox" v-show="showFaceIcon">
-                        <ul class="faceBoxList">
-                            <li v-on:click="faceIconClick(i)" class="faceIcon" v-for="(v,i) in face" :title="v.name">
-                                <img :src=v.path>
-                            </li>
-                        </ul>
-                        <div class="clear"></div>
-                    </div>
-                    <el-input show-word-limit maxlength="100" :rows="2" type="textarea" resize="none"
-                        class="visitorEditorArea" @focus="scrollBottom;showIconBtns=false"
-                        @blur="scrollBottom;showIconBtns=false" v-model="messageContent"
-                        v-on:keyup.enter.native="chatToUser">
-                    </el-input>
-                    <el-button type="primary" size="mini" class="visitorEditorBtn"
-                        :disabled="sendDisabled||messageContent==''"
-                        v-on:click="chatToUser();showIconBtns=false">发送</el-button>
                 </div>
-            </div>
 
-            <audio id="chatMessageAudio"></audio>
-            <audio id="chatMessageSendAudio"></audio>
+                <audio id="chatMessageAudio"></audio>
+                <audio id="chatMessageSendAudio"></audio>
+            </template>
         </template>
     </div>
 </body>
 <script>
-    var KEFU_ID = getQuery("kefu_id");
-    var visitor_name = getQuery('visitor_name');
-    var REFER = '{{.Refer}}';
+    const KEFU_ID = getQuery("kefu_id");
+    const token = getQuery('Authorization');
+    const visitor_name = getQuery('visitor_name');
+    const REFER = '{{.Refer}}';
+    const extra = getQuery("extra");
 </script>
 <script>
     new Vue({
@@ -143,6 +166,9 @@
                 pagesize: 5,
                 list: [],
             },
+            loading: false,
+            isLogined: false,
+            loginErr: '登录中...',
         },
         methods: {
             initConn: function () {
@@ -288,7 +314,7 @@
                     }).catch(err => {
                         _this.msgList.push(content);
                         console.log(err)
-                    }).finally(()=>{
+                    }).finally(() => {
                         _this.scrollBottom();
                     })
                 }
@@ -298,20 +324,27 @@
                 mes.from_id = this.visitor.visitor_id;
                 mes.to_id = this.visitor.to_id;
                 mes.content = asEncrypt(this.messageContent, KEFU_ID);
-                $.post("/2/message", mes, function (res) {
-                    _this.sendDisabled = false;
-                    if (res.code != 200) {
-                        _this.msgList.pop();
-                        _this.$message({
-                            message: res.msg,
-                            type: 'error'
-                        });
-                        return;
+                $.post({
+                    url: '/v2/message',
+                    data: mes,
+                    headers: {
+                        "x_access": localStorage.getItem("x_access")
+                    },
+                    success(res) {
+                        _this.sendDisabled = false;
+                        if (res.code != 200) {
+                            _this.msgList.pop();
+                            _this.$message({
+                                message: res.msg,
+                                type: 'error'
+                            });
+                            return;
+                        }
+                        _this.messageContent = "";
+                        clearInterval(_this.timer);
+                        _this.sendSound();
                     }
-                    _this.messageContent = "";
-                    clearInterval(_this.timer);
-                    _this.sendSound();
-                });
+                })
 
             },
             OnClose: function () {
@@ -321,29 +354,61 @@
             getOssUrl(file) {
                 return getOssUrl(file)
             },
-            getUserInfo: function () {
-                let obj = this.getCache("visitor_" + KEFU_ID);
-                var visitor_id = ""
-                var to_id = KEFU_ID;
-                if (obj) {
-                    visitor_id = obj.visitor_id;
-                }
-                let _this = this;
-                var extra = getQuery("extra");
-                $.post("/visitor_login", { visitor_id: visitor_id, visitor_name, refer: REFER, to_id: to_id, extra: extra }, function (res) {
-                    if (res.code != 200) {
-                        _this.$message({
-                            message: res.msg,
-                            type: 'error'
-                        });
-                        _this.sendDisabled = true;
-                        return;
+            login() {
+                return new Promise((resolve, reject) => {
+                    const _this = this;
+                    const form = {
+                        token,
+                        refer: REFER,
+                        to_id: KEFU_ID,
+                        extra,
                     }
-                    _this.visitor = res.result;
-                    _this.getHistoryMessage();
-                    _this.setCache("visitor_" + KEFU_ID, res.result);
-                    _this.initConn();
-                });
+                    $.post("/visitor_login", form, function (res) {
+                        if (res.code != 200) {
+                            _this.$message({
+                                message: res.msg,
+                                type: 'error'
+                            });
+                            _this.sendDisabled = true;
+                            _this.loginErr = res.msg || '登录失败,请刷新此页面试试'
+                            reject()
+                            return;
+                        }
+
+                        localStorage.setItem("x_access", res.result);
+                        
+                        resolve()
+                    });
+                })
+            },
+            getUserInfo: function () {
+                const _this = this;
+                $.get({
+                    url: '/v2/info',
+                    headers: {
+                        "x_access": localStorage.getItem("x_access")
+                    },
+                    data: {
+                        to_id: KEFU_ID,
+                    },
+                    success(res) {
+                        if (res.code != 200) {
+                            _this.$message({
+                                message: res.msg,
+                                type: 'error'
+                            });
+                            _this.sendDisabled = true;
+                            if (res.code != 200) {
+                                localStorage.removeItem("x_access");
+                                window.location.reload()
+                            }
+                            return;
+                        }
+                        _this.visitor = res.result;
+                        _this.getHistoryMessage();
+                        _this.initConn();
+                    }
+                })
             },
             getHistoryMessage: function () {
                 let params = {
@@ -352,42 +417,49 @@
                     visitor_id: this.visitor.visitor_id,
                 }
                 let _this = this;
-                $.get("/2/messagesPages", params, async function (res) {
-                    let msgList = res.result.list;
-                    if (msgList.length >= _this.messages.pagesize) {
-                        _this.showLoadMore = true;
-                    } else {
-                        _this.showLoadMore = false;
-                    }
-                    for (let i in msgList) {
-                        let item = msgList[i];
-                        let content = {}
-                        if (item["mes_type"] == "kefu") {
-                            item.is_kefu = true;
-                            item.avator = item["kefu_avator"];
-
+                $.get({
+                    url: '/v2/messagesPages',
+                    headers: {
+                        "x_access": localStorage.getItem("x_access")
+                    },
+                    data: params,
+                    success: async (res) => {
+                        let msgList = res.result.list;
+                        if (msgList.length >= _this.messages.pagesize) {
+                            _this.showLoadMore = true;
                         } else {
-                            item.is_kefu = false;
-                            item.avator = item["visitor_avator"];
+                            _this.showLoadMore = false;
                         }
-                        item.time = item["create_time"];
+                        for (let i in msgList) {
+                            let item = msgList[i];
+                            let content = {}
+                            if (item["mes_type"] == "kefu") {
+                                item.is_kefu = true;
+                                item.avator = item["kefu_avator"];
 
-                        item.content = replaceContent(asDecrypt(item["content"], KEFU_ID));
-                        const reg = /<img\s+[^>]*src\s*=\s*["']([^"']+)["'][^>]*>/;
-                        const res = String(item.content).match(reg);
-                        if (!res || !res[0].includes('onclick')) {
+                            } else {
+                                item.is_kefu = false;
+                                item.avator = item["visitor_avator"];
+                            }
+                            item.time = item["create_time"];
+
+                            item.content = replaceContent(asDecrypt(item["content"], KEFU_ID));
+                            const reg = /<img\s+[^>]*src\s*=\s*["']([^"']+)["'][^>]*>/;
+                            const res = String(item.content).match(reg);
+                            if (!res || !res[0].includes('onclick')) {
+                                _this.msgList.unshift(item);
+                                continue;
+                            }
+                            const src = await _this.getOssUrl(res[1]);
+                            item.content = item.content.replace(res[1], src);
                             _this.msgList.unshift(item);
-                            continue;
                         }
-                        const src = await _this.getOssUrl(res[1]);
-                        item.content = item.content.replace(res[1], src);
-                        _this.msgList.unshift(item);
-                    }
-                    if (_this.messages.page == 1) {
-                        _this.scrollBottom();
-                    }
-                    _this.messages.page++;
-                });
+                        if (_this.messages.page == 1) {
+                            _this.scrollBottom();
+                        }
+                        _this.messages.page++;
+                    },
+                })
             },
             scrollBottom: function () {
                 var _this = this;
@@ -402,16 +474,6 @@
             },
             digit: function (num) {
                 return num < 10 ? '0' + (num | 0) : num;
-            },
-            setCache: function (key, obj) {
-                if (navigator.cookieEnabled && typeof window.localStorage !== 'undefined') {
-                    localStorage.setItem(key, JSON.stringify(obj));
-                }
-            },
-            getCache: function (key) {
-                if (navigator.cookieEnabled && typeof window.localStorage !== 'undefined') {
-                    return JSON.parse(localStorage.getItem(key));
-                }
             },
             initCss: function () {
                 var _this = this;
@@ -464,7 +526,7 @@
                 $('.faceBox').hide();
                 this.messageContent += "face" + this.face[index].name;
             },
-            uploadImg: function (url) {
+            uploadImg: function () {
                 let _this = this;
                 $('#uploadImg').after('<input type="file" accept="image/gif,image/jpeg,image/jpg,image/png" id="uploadImgFile" name="file" style="display:none" >');
                 $("#uploadImgFile").click();
@@ -473,9 +535,12 @@
                     var file = $("#uploadImgFile")[0].files[0];
                     formData.append("imgfile", file);
                     filter(file) && $.ajax({
-                        url: url || '',
+                        url: '/v2/uploadimg',
                         type: "post",
                         data: formData,
+                        headers: {
+                            "x_access": localStorage.getItem("x_access")
+                        },
                         contentType: false,
                         processData: false,
                         dataType: 'JSON',
@@ -488,46 +553,6 @@
                                 });
                             } else {
                                 _this.messageContent += 'img[/' + res.result.path + ']';
-                                _this.chatToUser();
-                            }
-                        },
-                        error: function (data) {
-                            console.log(data);
-                        }
-                    });
-                });
-            },
-            uploadFile: function (url) {
-                let _this = this;
-                $('#uploadFile').after('<input type="file" id="uploadRealFile" name="file2" style="display:none" >');
-                $("#uploadRealFile").click();
-                $("#uploadRealFile").change(function (e) {
-                    var formData = new FormData();
-                    var file = $("#uploadRealFile")[0].files[0];
-                    formData.append("realfile", file);
-                    console.log(formData);
-                    $.ajax({
-                        url: url || '',
-                        type: "post",
-                        data: formData,
-                        contentType: false,
-                        processData: false,
-                        dataType: 'JSON',
-                        mimeType: "multipart/form-data",
-                        success: function (res) {
-                            if (res.code != 200) {
-                                _this.$message({
-                                    message: res.msg,
-                                    type: 'error'
-                                });
-                            } else {
-                                var data = JSON.stringify({
-                                    name: res.result.name,
-                                    ext: res.result.ext,
-                                    size: res.result.size,
-                                    path: '/' + res.result.path,
-                                })
-                                _this.messageContent += 'attachment[' + data + ']';
                                 _this.chatToUser();
                             }
                         },
@@ -554,9 +579,12 @@
                 var formData = new FormData();
                 formData.append('imgfile', file);
                 $.ajax({
-                    url: '/uploadimg',
+                    url: '/v2/uploadimg',
                     type: "post",
                     data: formData,
+                    headers: {
+                        "x_access": localStorage.getItem("x_access")
+                    },
                     contentType: false,
                     processData: false,
                     dataType: 'JSON',
@@ -613,20 +641,20 @@
                     }
                 });
             },
-            getNotice : function (){
-                let _this=this;
-                $.get("/notice?kefu_id="+KEFU_ID,function(res) {
-                    var code=res.code;
-                    if(code!=200) return;
-                    _this.kefuInfo=res.result;
-                    _this.showTitle(_this.kefuInfo.nickname+" 正在为您服务");
-                    if(!_this.kefuInfo.welcome) return;
-                    var msg={
-                        content:replaceContent(_this.kefuInfo.welcome),
-                        avator:_this.kefuInfo.avatar,
-                        name :_this.kefuInfo.nickname,
-                        time:_this.getNowDate(),
-                        is_kefu:true,
+            getNotice: function () {
+                let _this = this;
+                $.get("/notice?kefu_id=" + KEFU_ID, function (res) {
+                    var code = res.code;
+                    if (code != 200) return;
+                    _this.kefuInfo = res.result;
+                    _this.showTitle(_this.kefuInfo.nickname + " 正在为您服务");
+                    if (!_this.kefuInfo.welcome) return;
+                    var msg = {
+                        content: replaceContent(_this.kefuInfo.welcome),
+                        avator: _this.kefuInfo.avatar,
+                        name: _this.kefuInfo.nickname,
+                        time: _this.getNowDate(),
+                        is_kefu: true,
                     }
                     _this.msgList.push(msg);
                     _this.scrollBottom();
@@ -642,7 +670,11 @@
             document.addEventListener('paste', this.onPasteUpload)
             document.addEventListener('scroll', this.textareaBlur)
         },
-        created: function () {
+        created: async function () {
+            if (!localStorage.getItem("x_access")) {
+                await this.login();
+            }
+            this.isLogined = true;
             this.init();
             this.getUserInfo();
         }
