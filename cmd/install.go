@@ -1,12 +1,13 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
 	"goflylivechat/models"
 	"goflylivechat/tools"
 	"log"
 	"os"
 	"strings"
+
+	"github.com/spf13/cobra"
 )
 
 var installCmd = &cobra.Command{
@@ -21,7 +22,7 @@ func install() {
 	// Check if already installed
 	if ok, _ := tools.IsFileNotExist("./install.lock"); !ok {
 		log.Println("Please remove ./install.lock file to reinstall")
-		os.Exit(1)
+		os.Exit(0)
 	}
 
 	// Verify required files exist
