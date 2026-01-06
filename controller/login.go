@@ -114,7 +114,6 @@ func VisitorLogin(c *gin.Context) {
 	countryname, cityname := tools.GetCity("./config/GeoLite2-City.mmdb", c.ClientIP())
 	if countryname != "" || cityname != "" {
 		city = fmt.Sprintf("%s %s", countryname, cityname)
-		name = fmt.Sprintf("%s Guest", city)
 	}
 
 	client_ip := c.ClientIP()
@@ -124,9 +123,6 @@ func VisitorLogin(c *gin.Context) {
 		var extraObj VisitorExtra
 		err := json.Unmarshal([]byte(extraJson), &extraObj)
 		if err == nil {
-			if extraObj.VisitorName != "" {
-				name = extraObj.VisitorName
-			}
 			if extraObj.VisitorAvatar != "" {
 				avator = extraObj.VisitorAvatar
 			}
@@ -186,9 +182,14 @@ func VisitorLogin(c *gin.Context) {
 		return
 	}
 
+	result := map[string]string{
+		"token": authToken,
+		"name":  name,
+	}
+
 	c.JSON(200, gin.H{
 		"code":   200,
 		"msg":    "ok",
-		"result": authToken,
+		"result": result,
 	})
 }

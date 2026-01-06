@@ -135,7 +135,6 @@ func GetVisitorInfo(c *gin.Context) {
 	if vistor.ToId != toId {
 		models.DeleteMessage("visitor_id = ?", vistor.VisitorId)
 	}
-	models.UpdateVisitor(vistor.Name, vistor.Avator, vistor.VisitorId, 1, c.ClientIP(), toId, c.ClientIP(), vistor.Refer, vistor.Extra)
 	c.JSON(200, gin.H{
 		"code":   200,
 		"msg":    "ok",

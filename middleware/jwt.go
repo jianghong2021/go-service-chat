@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"goflylivechat/tools"
+	"log"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -57,6 +58,7 @@ func JwtApiVisitorMiddleware(c *gin.Context) {
 			"code": 401,
 			"msg":  "验证失败",
 		})
+		log.Println("token parse: ", userinfo, token)
 		c.Abort()
 		return
 	}

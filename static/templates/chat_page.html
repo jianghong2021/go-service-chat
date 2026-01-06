@@ -168,7 +168,8 @@
             },
             loading: false,
             isLogined: false,
-            loginErr: '登录中...',
+            loginErr: '初始化...',
+            username: '',
         },
         methods: {
             initConn: function () {
@@ -328,7 +329,7 @@
                     url: '/v2/message',
                     data: mes,
                     headers: {
-                        "access": localStorage.getItem("x_access")
+                        "access": _this.getToken()
                     },
                     success(res) {
                         _this.sendDisabled = false;
@@ -351,12 +352,16 @@
                 console.log("ws:onclose");
                 this.focusSendConn = true;
             },
+            getToken() {
+                return localStorage.getItem("x_access_" + this.username)
+            },
             getOssUrl(file) {
                 return getOssUrl(file)
             },
             login() {
+                const _this = this;
                 return new Promise((resolve, reject) => {
-                    const _this = this;
+
                     const form = {
                         token,
                         refer: REFER,
@@ -375,8 +380,9 @@
                             return;
                         }
 
-                        localStorage.setItem("x_access", res.result);
-                        
+                        localStorage.setItem("x_access_" + res.result.name, res.result.token);
+                        _this.username = res.result.name;
+
                         resolve()
                     });
                 })
@@ -386,7 +392,7 @@
                 $.get({
                     url: '/v2/info',
                     headers: {
-                        "access": localStorage.getItem("x_access")
+                        "access": _this.getToken()
                     },
                     data: {
                         to_id: KEFU_ID,
@@ -398,13 +404,6 @@
                                 type: 'error'
                             });
                             _this.sendDisabled = true;
-                            if (res.code != 200) {
-                                localStorage.removeItem("x_access");
-                                if(!sessionStorage.getItem('reload')){
-                                    sessionStorage.setItem('reload','1')
-                                    window.location.reload()
-                                }
-                            }
                             return;
                         }
                         _this.visitor = res.result;
@@ -423,7 +422,7 @@
                 $.get({
                     url: '/v2/messagesPages',
                     headers: {
-                        "access": localStorage.getItem("x_access")
+                        "access": _this.getToken()
                     },
                     data: params,
                     success: async (res) => {
@@ -542,7 +541,7 @@
                         type: "post",
                         data: formData,
                         headers: {
-                            "access": localStorage.getItem("x_access")
+                            "access": _this.getToken()
                         },
                         contentType: false,
                         processData: false,
@@ -586,7 +585,7 @@
                     type: "post",
                     data: formData,
                     headers: {
-                        "access": localStorage.getItem("x_access")
+                        "access": _this.getToken()
                     },
                     contentType: false,
                     processData: false,
@@ -673,13 +672,13 @@
             document.addEventListener('paste', this.onPasteUpload)
             document.addEventListener('scroll', this.textareaBlur)
         },
-        created: async function () {
-            if (!localStorage.getItem("x_access")) {
-                await this.login();
-            }
-            this.isLogined = true;
-            this.init();
-            this.getUserInfo();
+        created() {
+            this.login().then(() => {
+                this.isLogined = true;
+                this.init();
+                this.getUserInfo();
+            })
+
         }
     })
 </script>
