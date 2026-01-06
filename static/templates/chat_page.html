@@ -328,7 +328,7 @@
                     url: '/v2/message',
                     data: mes,
                     headers: {
-                        "x_access": localStorage.getItem("x_access")
+                        "access": localStorage.getItem("x_access")
                     },
                     success(res) {
                         _this.sendDisabled = false;
@@ -386,7 +386,7 @@
                 $.get({
                     url: '/v2/info',
                     headers: {
-                        "x_access": localStorage.getItem("x_access")
+                        "access": localStorage.getItem("x_access")
                     },
                     data: {
                         to_id: KEFU_ID,
@@ -423,7 +423,7 @@
                 $.get({
                     url: '/v2/messagesPages',
                     headers: {
-                        "x_access": localStorage.getItem("x_access")
+                        "access": localStorage.getItem("x_access")
                     },
                     data: params,
                     success: async (res) => {
@@ -542,7 +542,7 @@
                         type: "post",
                         data: formData,
                         headers: {
-                            "x_access": localStorage.getItem("x_access")
+                            "access": localStorage.getItem("x_access")
                         },
                         contentType: false,
                         processData: false,
@@ -586,7 +586,7 @@
                     type: "post",
                     data: formData,
                     headers: {
-                        "x_access": localStorage.getItem("x_access")
+                        "access": localStorage.getItem("x_access")
                     },
                     contentType: false,
                     processData: false,
