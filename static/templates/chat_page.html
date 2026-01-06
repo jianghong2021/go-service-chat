@@ -400,7 +400,10 @@
                             _this.sendDisabled = true;
                             if (res.code != 200) {
                                 localStorage.removeItem("x_access");
-                                window.location.reload()
+                                if(!sessionStorage.getItem('reload')){
+                                    sessionStorage.setItem('reload','1')
+                                    window.location.reload()
+                                }
                             }
                             return;
                         }
