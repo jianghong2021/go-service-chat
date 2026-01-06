@@ -151,6 +151,11 @@ func VisitorLogin(c *gin.Context) {
 		avator = visitor.Avator
 		//更新状态上线
 		models.UpdateVisitor(name, visitor.Avator, visitor.VisitorId, 1, c.ClientIP(), toId, c.ClientIP(), refer, extra)
+
+		//清空之前的记录
+		if visitor.ToId != toId {
+			models.DeleteMessage("visitor_id = ?", visitor.VisitorId)
+		}
 	} else {
 		models.CreateVisitor(name, avator, c.ClientIP(), toId, visitor_id, refer, city, client_ip, extra)
 	}

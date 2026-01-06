@@ -113,7 +113,6 @@ func GetVisitor(c *gin.Context) {
 
 func GetVisitorInfo(c *gin.Context) {
 	visitor_id := c.GetString("visitor_id")
-	toId := c.Query("to_id")
 	if visitor_id == "" {
 		c.JSON(200, gin.H{
 			"code":   401,
@@ -131,10 +130,7 @@ func GetVisitorInfo(c *gin.Context) {
 		})
 		return
 	}
-	//清空之前的记录
-	if vistor.ToId != toId {
-		models.DeleteMessage("visitor_id = ?", vistor.VisitorId)
-	}
+
 	c.JSON(200, gin.H{
 		"code":   200,
 		"msg":    "ok",
