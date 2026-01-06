@@ -47,9 +47,9 @@ func JwtApiMiddleware(c *gin.Context) {
 }
 
 func JwtApiVisitorMiddleware(c *gin.Context) {
-	token := c.GetHeader("x_access")
+	token := c.GetHeader("access")
 	if token == "" {
-		token = c.Query("x_access")
+		token = c.Query("access")
 	}
 	userinfo := tools.ParseToken(token)
 	if userinfo == nil || userinfo["visitor_id"] == nil || userinfo["create_time"] == nil {
