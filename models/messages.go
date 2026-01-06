@@ -36,8 +36,9 @@ func CreateMessage(kefu_id string, visitor_id string, content string, mes_type s
 		MesType:   mes_type,
 		Status:    "unread",
 	}
-	v.UpdatedAt = time.Now().UTC()
-	v.CreatedAt = time.Now().UTC()
+	loc, _ := time.LoadLocation("Asia/Shanghai")
+	v.UpdatedAt = time.Now().In(loc)
+	v.CreatedAt = time.Now().In(loc)
 	DB.Create(v)
 }
 func FindMessageByVisitorId(visitor_id string) []Message {
