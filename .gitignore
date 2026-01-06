@@ -7,3 +7,4 @@ static/upload
 install.lock
 *.exe
 ssl.text
+ssl
